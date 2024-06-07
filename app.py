@@ -5,9 +5,9 @@ from dash import Dash, dcc, html
 from dash.dependencies import Output, Input
 from dash import dcc, html, Input, Output
 
-#url='https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFAFFJ2DHPAOS7PVDK4ZTCOFTA'
+url='https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFAFFJ2DHPAOS7PVDK4ZTCOFTA'
 
-#df = pd.read_csv(url, index_col=0)
+df = pd.read_csv(url, index_col=0)
 #df = pd.read_csv(os.path.join(os.path.dirname(__file__), 'Trreb Analysis Toronto_C.csv.csv'), encoding='ISO-8859-1')
    
 df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
@@ -23,7 +23,7 @@ filtered_selected_columns = df[condition][['Community', 'Bedrooms', 'SqFt', 'Sol
 # Convert 'Sold Price' column to numeric
 filtered_selected_columns['Sold Price'] = pd.to_numeric(filtered_selected_columns['Sold Price'], errors='coerce')
 filtered_selected_columns['DOM'] = pd.to_numeric(filtered_selected_columns['DOM'], errors='coerce')
-filtered_selected_columns.to_csv(r'C:\TRREB ANALYSIS\filtered_selected_columns.csv', encoding='ISO-8859-1')
+#filtered_selected_columns.to_csv(r'C:\TRREB ANALYSIS\filtered_selected_columns.csv', encoding='ISO-8859-1')
 grouped_df = filtered_selected_columns.groupby(['Community', 'Bedrooms', 'SqFt']).agg(
     avg_sold_price=('Sold Price', 'mean'),
     avg_DOM=('DOM', 'mean'),
