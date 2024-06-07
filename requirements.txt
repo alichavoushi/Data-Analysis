@@ -1,5 +1,6 @@
 dash
 numpy
+dash.dependencies
 dash-core-components
 dash-html-components
 pandas
