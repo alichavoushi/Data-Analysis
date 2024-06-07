@@ -6,12 +6,10 @@ from dash.dependencies import Output, Input
 from dash import dcc, html, Input, Output
 import os
 
-app = Dash(__name__)
-server = app.server
 
-df = pd.read_csv(os.path.join(os.path.dirname(__file__), 'Trreb Analysis Toronto_C.csv.csv'), encoding='ISO-8859-1')
+#df = pd.read_csv(os.path.join(os.path.dirname(__file__), 'Trreb Analysis Toronto_C.csv.csv'), encoding='ISO-8859-1')
    
-#df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
+df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
 
 # Read the CSV file
 #df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
@@ -36,7 +34,7 @@ grouped_df['avg_DOM'] = np.ceil(grouped_df['avg_DOM'])
 
 grouped_df = grouped_df.reset_index().sort_values(by=['Community', 'Bedrooms','SqFt'])
 
-grouped_df.to_csv(r'C:\TRREB ANALYSIS\Average_Sold_Price.csv', encoding='ISO-8859-1')
+#grouped_df.to_csv(r'C:\TRREB ANALYSIS\Average_Sold_Price.csv', encoding='ISO-8859-1')
 # Create a scatter plot using Plotly
 
 
@@ -44,6 +42,8 @@ grouped_df.to_csv(r'C:\TRREB ANALYSIS\Average_Sold_Price.csv', encoding='ISO-885
 community_options = [{'label': community, 'value': community} for community in filtered_selected_columns['Community'].unique()]
 bedroom_options = [{'label': str(bedroom), 'value': bedroom} for bedroom in filtered_selected_columns['Bedrooms'].unique()]
 
+app = Dash(__name__)
+server = app.server
 # Define the layout of the web application
 app.layout = html.Div([
     html.Label('Select Community:'),
