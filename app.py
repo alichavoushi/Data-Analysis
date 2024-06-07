@@ -9,12 +9,9 @@ import os
 app = Dash(__name__)
 server = app.server
 
-if 'DYNO' in os.environ:
-    # We are on Heroku
-    df = pd.read_csv(os.path.join(os.path.dirname(__file__), 'Trreb Analysis Toronto_C.csv'), encoding='ISO-8859-1')
-else:
-    # We are running locally
-    df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
+df = pd.read_csv(os.path.join(os.path.dirname(__file__), 'Trreb Analysis Toronto_C.csv.csv'), encoding='ISO-8859-1')
+   
+#df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
 
 # Read the CSV file
 #df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
@@ -92,6 +89,3 @@ def update_scatter_plot(selected_communities, selected_bedrooms):
 
 if __name__ == '__main__':
     app.run_server(debug=True)
-
-
-
