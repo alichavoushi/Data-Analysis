@@ -6,10 +6,12 @@ from dash.dependencies import Output, Input
 from dash import dcc, html, Input, Output
 import os
 
+url='https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ'
 
+df = pd.read_csv(url, index_col=0)
 #df = pd.read_csv(os.path.join(os.path.dirname(__file__), 'Trreb Analysis Toronto_C.csv.csv'), encoding='ISO-8859-1')
    
-df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
+#df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
 
 # Read the CSV file
 #df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
