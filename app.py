@@ -4,14 +4,13 @@ import plotly.express as px
 from dash import Dash, dcc, html
 from dash.dependencies import Output, Input
 from dash import dcc, html, Input, Output
-import os
 
-url='https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFAFFJ2DHPAOS7PVDK4ZTCOFTA'
+#url='https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFAFFJ2DHPAOS7PVDK4ZTCOFTA'
 
-df = pd.read_csv(url, index_col=0)
+#df = pd.read_csv(url, index_col=0)
 #df = pd.read_csv(os.path.join(os.path.dirname(__file__), 'Trreb Analysis Toronto_C.csv.csv'), encoding='ISO-8859-1')
    
-#df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
+df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
 
 # Read the CSV file
 #df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C.csv', encoding='ISO-8859-1')
@@ -45,7 +44,7 @@ community_options = [{'label': community, 'value': community} for community in f
 bedroom_options = [{'label': str(bedroom), 'value': bedroom} for bedroom in filtered_selected_columns['Bedrooms'].unique()]
 
 app = Dash(__name__)
-server = app.server
+#server = app.server
 # Define the layout of the web application
 app.layout = html.Div([
     html.Label('Select Community:'),
