@@ -141,7 +141,7 @@ app.layout = html.Div([
         multi=True,  # Allow multiple selections
         style={'font-size': 'smaller','width': '100%'}  # Adjust font size
     ),
-    dcc.Graph(id='scatter-plot')
+    dcc.Graph(id='scatter-plot', style={'height': '80vh'})  # Set height using viewport units
 ])
 
 # Define callback to update scatter plot based on slicer values
