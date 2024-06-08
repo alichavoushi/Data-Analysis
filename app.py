@@ -176,17 +176,17 @@ def update_scatter_plot(selected_communities, selected_bedrooms, selected_sqft, 
     
     fig = px.scatter(filtered_df, x='SqFt', y='avg_sold_price', color='Community',
                      size='units',# hover_name='Community',
-                     hover_data=['Bedrooms','Exposure','units','avg_DOM'],
+                     hover_data=['Bedrooms','Floor_Category','Exposure','units','avg_DOM'],
                      labels={'SqFt': 'Square Feet', 'Sold Price': 'Average Sold Price'},
                      title='Average Sold Price by Square Feet and Community')
     
     
 
 
-    fig.update_yaxes(range=[400000, 2000000], tickformat='$,.0f', dtick=200000)
+    fig.update_yaxes(range=[300000, 2000000], tickformat='$,.0f', dtick=200000)
     fig.update_xaxes(categoryorder='array', categoryarray=sorted_x_values)
     fig.update_layout(
-        height=700,
+        height=1000,
         margin=dict(t=100),  # Add margin to the top
         legend=dict(
             orientation='h',
