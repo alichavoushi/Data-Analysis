@@ -186,7 +186,7 @@ def update_scatter_plot(selected_communities, selected_bedrooms, selected_sqft, 
     fig.update_yaxes(range=[300000, 2000000], tickformat='$,.0f', dtick=200000)
     fig.update_xaxes(categoryorder='array', categoryarray=sorted_x_values)
     fig.update_layout(
-        height=1000,
+        height=600,
         margin=dict(t=100),  # Add margin to the top
         legend=dict(
             orientation='h',
