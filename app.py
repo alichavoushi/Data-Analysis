@@ -13,6 +13,8 @@ df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
 # Create a DataFrame
 df1 = pd.DataFrame(df)
 df1['Apt/Unit #'] = df1['Apt/Unit #'].str.replace('#', '')
+df1.fillna({'Street #': '', 'Street Name': ''}, inplace=True)
+df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(str)
 
 def calculate_floor(row):
     unit = str(row['Apt/Unit #'])   
@@ -69,7 +71,7 @@ df1['Sold Price'] = pd.to_numeric(df1['Sold Price'], errors='coerce')
 
 condition = (df1['Status'] == 'Sold') & (df1['Municipality District'] == 'Toronto C01')& (df1['Sold Price'] < 2000000)
 
-filtered_selected_columns = df1[condition][['Community', 'Bedrooms', 'SqFt', 'Sold Price','DOM','Exposure','Floor_Category']]
+filtered_selected_columns = df1[condition][['Community', 'Short Address','Bedrooms', 'SqFt', 'Sold Price','DOM','Exposure','Floor_Category']]
 # Convert 'Sold Price' column to numeric
 filtered_selected_columns['Sold Price'] = pd.to_numeric(filtered_selected_columns['Sold Price'], errors='coerce')
 filtered_selected_columns['DOM'] = pd.to_numeric(filtered_selected_columns['DOM'], errors='coerce')
@@ -80,86 +82,199 @@ filtered_selected_columns['SqFt'] = filtered_selected_columns['SqFt'].astype(str
 filtered_selected_columns['Community'] = filtered_selected_columns['Community'].astype(str)
 filtered_selected_columns['Exposure'] = filtered_selected_columns['Exposure'].astype(str)
 
-grouped_df = filtered_selected_columns.groupby(['Community', 'Bedrooms', 'SqFt','Exposure','Floor_Category']).agg(
+grouped_df_1 = filtered_selected_columns.groupby(['Community', 'Bedrooms', 'SqFt','Exposure','Floor_Category']).agg(
     avg_sold_price=('Sold Price', 'mean'),
     avg_DOM=('DOM', 'mean'),
     units=('Community', 'size')
 ).reset_index()
 
 
-grouped_df['avg_sold_price'] = np.ceil(grouped_df['avg_sold_price'])
-grouped_df['avg_DOM'] = np.ceil(grouped_df['avg_DOM'])
+grouped_df_1['avg_sold_price'] = np.ceil(grouped_df_1['avg_sold_price'])
+grouped_df_1['avg_DOM'] = np.ceil(grouped_df_1['avg_DOM'])
 
-# Define slicers (dropdowns) for filtering data
-community_options = [{'label': community, 'value': community} for community in filtered_selected_columns['Community'].unique()]
-bedroom_options = [{'label': str(bedroom), 'value': bedroom} for bedroom in filtered_selected_columns['Bedrooms'].unique()]
-sqft_options = [{'label': sqft, 'value': sqft} for sqft in filtered_selected_columns['SqFt'].unique()]
-exposure_options = [{'label': exposure, 'value': exposure} for exposure in filtered_selected_columns['Exposure'].unique()]
-floor_category_options = [{'label': floor_category, 'value': floor_category} for floor_category in filtered_selected_columns['Floor_Category'].unique()]
+grouped_df_2 = filtered_selected_columns.groupby(['Community', 'Short Address','Bedrooms', 'SqFt','Exposure','Floor_Category']).agg(
+    avg_sold_price=('Sold Price', 'mean'),
+    avg_DOM=('DOM', 'mean'),
+    units=('Community', 'size')
+).reset_index()
+
+
+grouped_df_2['avg_sold_price'] = np.ceil(grouped_df_2['avg_sold_price'])
+grouped_df_2['avg_DOM'] = np.ceil(grouped_df_2['avg_DOM'])
+
+# Define slicers (dropdowns) for filtering data tab-1
+community_options_1 = [{'label': community, 'value': community} for community in grouped_df_1['Community'].unique()]
+bedroom_options_1 = [{'label': str(bedroom), 'value': bedroom} for bedroom in grouped_df_1['Bedrooms'].unique()]
+sqft_options_1 = [{'label': sqft, 'value': sqft} for sqft in grouped_df_1['SqFt'].unique()]
+exposure_options_1 = [{'label': exposure, 'value': exposure} for exposure in grouped_df_1['Exposure'].unique()]
+floor_category_options_1 = [{'label': floor_category, 'value': floor_category} for floor_category in grouped_df_1['Floor_Category'].unique()]
+
+
+
+# Define slicers (dropdowns) for filtering data tab-2
+community_options_2 = [{'label': community, 'value': community} for community in grouped_df_2['Community'].unique()]
+bedroom_options_2 = [{'label': str(bedroom), 'value': bedroom} for bedroom in grouped_df_2['Bedrooms'].unique()]
+sqft_options_2 = [{'label': sqft, 'value': sqft} for sqft in grouped_df_2['SqFt'].unique()]
+exposure_options_2 = [{'label': exposure, 'value': exposure} for exposure in grouped_df_2['Exposure'].unique()]
+floor_category_options_2 = [{'label': floor_category, 'value': floor_category} for floor_category in grouped_df_2['Floor_Category'].unique()]
+short_address_options_2 = [{'label': short_address, 'value': short_address} for short_address in grouped_df_2['Short Address'].unique()]
 
 app = Dash(__name__)
 server = app.server
+
+app.config.suppress_callback_exceptions = True
 # Define the layout of the web application
 app.layout = html.Div([
-    html.Label('Select Community:'),
-    dcc.Dropdown(
-        id='community-filter',
-        options=community_options,
-        value=[option['value'] for option in community_options],  # Set default value to all communities
-        multi=True,  # Allow multiple selections
-        style={'font-size': 'smaller','width': '100%'}
-    ),
-    html.Label('Select Bedrooms:'),
-    dcc.Dropdown(
-        id='bedroom-filter',
-        options=bedroom_options,
-        value=[option['value'] for option in bedroom_options],  # Set default value to all bedrooms
-        multi=True,  # Allow multiple selections
-        style={'font-size': 'smaller','width': '100%'}
-    ),
-    html.Label('Select SqFt:'),
-    dcc.Dropdown(
-        id='sqft-filter',
-        options=sqft_options,
-        value=[option['value'] for option in sqft_options],  # Set default value to all SqFt
-        multi=True,  # Allow multiple selections
-        style={'font-size': 'smaller','width': '100%'}
-    ),
-    html.Label('Select Exposure:'),
-    dcc.Dropdown(
-        id='exposure-filter',
-        options=exposure_options,
-        value=[option['value'] for option in exposure_options],  # Set default value to all Exposures
-        multi=True,  # Allow multiple selections
-        style={'font-size': 'smaller','width': '100%'}  # Adjust font size
-    ),
-    html.Label('Select Floor_Category:'),
-    dcc.Dropdown(
-        id='floor_category-filter',
-        options=floor_category_options,
-        value=[option['value'] for option in floor_category_options],  # Set default value to all Exposures
-        multi=True,  # Allow multiple selections
-        style={'font-size': 'smaller','width': '100%'}  # Adjust font size
-    ),
-    dcc.Graph(id='scatter-plot', style={'height': '80vh'})  # Set height using viewport units
+    dcc.Tabs(id='tabs', value='tab-1', children=[
+        dcc.Tab(label='Scatter Plot 1', value='tab-1'),
+        dcc.Tab(label='Scatter Plot 2', value='tab-2'),
+    ]),
+    html.Div(id='tabs-content')
 ])
 
-# Define callback to update scatter plot based on slicer values
 @app.callback(
-    Output('scatter-plot', 'figure'),
-    [Input('community-filter', 'value'),
-     Input('bedroom-filter', 'value'),
-     Input('sqft-filter', 'value'),
-     Input('exposure-filter', 'value'),
-     Input('floor_category-filter', 'value')]
+    Output('tabs-content', 'children'),
+    Input('tabs', 'value')
 )
 
-def update_scatter_plot(selected_communities, selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category):
-    filtered_df = grouped_df[grouped_df['Community'].isin(selected_communities) & 
-                             grouped_df['Bedrooms'].isin(selected_bedrooms) & 
-                             grouped_df['SqFt'].isin(selected_sqft) &
-                             grouped_df['Exposure'].isin(selected_exposure) &
-                             grouped_df['Floor_Category'].isin(selected_floor_category)]
+def render_content(tab):
+    if tab == 'tab-1':
+        return html.Div([
+            html.Label('Select Community:'),
+            dcc.Dropdown(
+                id='community-filter-1',
+                options=community_options_1,
+                value=['University'],
+                #value=[option['value'] for option in community_options_1],  # Set default value to all communities
+                multi=True,  # Allow multiple selections
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select Bedrooms:'),
+            dcc.Dropdown(
+                id='bedroom-filter-1',
+                options=bedroom_options_1,
+                value=[option['value'] for option in bedroom_options_1],  # Set default value to all bedrooms
+                multi=True,  # Allow multiple selections
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select SqFt:'),
+            dcc.Dropdown(
+                id='sqft-filter-1',
+                options=sqft_options_1,
+                value=[option['value'] for option in sqft_options_1],  # Set default value to all SqFt
+                multi=True,  # Allow multiple selections
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select Exposure:'),
+            dcc.Dropdown(
+                id='exposure-filter-1',
+                options=exposure_options_1,
+                value=[option['value'] for option in exposure_options_1],  # Set default value to all Exposures
+                multi=True,  # Allow multiple selections
+                style={'font-size': 'smaller', 'width': '100%'}  # Adjust font size
+            ),
+            html.Label('Select Floor Category:'),
+            dcc.Dropdown(
+                id='floor-category-filter-1',
+                options=floor_category_options_1,
+                value=[option['value'] for option in floor_category_options_1],  # Set default value to all Floor Categories
+                multi=True,  # Allow multiple selections
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            dcc.Graph(id='scatter-plot-1', style={'height': '80vh'})  # Set height using viewport units
+        ])
+    elif tab == 'tab-2':
+        return html.Div([
+            html.Label('Select Community2:'),
+            dcc.Dropdown(
+                id='community-filter-2',
+                options=community_options_2,
+                value=['University'],
+                #value=[option['value'] for option in community_options_2],  # Set default value to all communities
+                multi=True,  # Allow multiple selections
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select Address:'),
+            dcc.Dropdown(
+                id='short-address-filter-2',
+                #options=short_address_options_2,
+                #value=[option['value'] for option in short_address_options_2],  # Set default value to all communities
+                multi=True,  # Allow multiple selections
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select Bedrooms:'),
+            dcc.Dropdown(
+                id='bedroom-filter-2',
+                options=bedroom_options_2,
+                value=[option['value'] for option in bedroom_options_2],  # Set default value to all bedrooms
+                multi=True,  # Allow multiple selections
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select SqFt:'),
+            dcc.Dropdown(
+                id='sqft-filter-2',
+                options=sqft_options_2,
+                value=[option['value'] for option in sqft_options_2],  # Set default value to all SqFt
+                multi=True,  # Allow multiple selections
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select Exposure:'),
+            dcc.Dropdown(
+                id='exposure-filter-2',
+                options=exposure_options_2,
+                value=[option['value'] for option in exposure_options_2],  # Set default value to all Exposures
+                multi=True,  # Allow multiple selections
+                style={'font-size': 'smaller', 'width': '100%'}  # Adjust font size
+            ),
+            html.Label('Select Floor Category:'),
+            dcc.Dropdown(
+                id='floor-category-filter-2',
+                options=floor_category_options_2,
+                value=[option['value'] for option in floor_category_options_2],  # Set default value to all Floor Categories
+                multi=True,  # Allow multiple selections
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            dcc.Graph(id='scatter-plot-2', style={'height': '80vh'})  # Set height using viewport units
+        ])
+
+
+# Callback to update the options for short address based on selected community
+@app.callback(
+    Output('short-address-filter-2', 'options'),
+    Output('short-address-filter-2', 'value'),
+    Input('community-filter-2', 'value')
+)
+def set_short_address_options(selected_communities):
+    if not selected_communities:
+        filtered_df = grouped_df_2
+    else:
+        filtered_df = grouped_df_2[grouped_df_2['Community'].isin(selected_communities)]
+    
+    short_address_options = [{'label': short_address, 'value': short_address} for short_address in filtered_df['Short Address'].unique()]
+    
+    # Debug: Print filtered short address options
+    #print("Filtered Short Address Options: ", short_address_options)
+    
+    return short_address_options, [option['value'] for option in short_address_options]
+
+
+# Callback to update scatter plot based on slicer values for tab-1
+# Define callback to update scatter plot based on slicer values
+@app.callback(
+    Output('scatter-plot-1', 'figure'),
+    [Input('community-filter-1', 'value'),
+     Input('bedroom-filter-1', 'value'),
+     Input('sqft-filter-1', 'value'),
+     Input('exposure-filter-1', 'value'),
+     Input('floor-category-filter-1', 'value')]
+)
+
+def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category):
+    filtered_df_1 = grouped_df_1[grouped_df_1['Community'].isin(selected_communities) & 
+                             grouped_df_1['Bedrooms'].isin(selected_bedrooms) & 
+                             grouped_df_1['SqFt'].isin(selected_sqft) &
+                             grouped_df_1['Exposure'].isin(selected_exposure) &
+                             grouped_df_1['Floor_Category'].isin(selected_floor_category)]
     
 #def update_scatter_plot(selected_communities, selected_bedrooms):
  #   filtered_df = grouped_df[grouped_df['Community'].isin(selected_communities) & grouped_df['Bedrooms'].isin(selected_bedrooms)]
@@ -171,10 +286,10 @@ def update_scatter_plot(selected_communities, selected_bedrooms, selected_sqft, 
             return 0  # If the value is not convertible to an integer, return 0
 
 
-    sorted_x_values = sorted(filtered_df['SqFt'].unique(), key=extract_lower_bound)
+    sorted_x_values = sorted(filtered_df_1['SqFt'].unique(), key=extract_lower_bound)
     
     
-    fig = px.scatter(filtered_df, x='SqFt', y='avg_sold_price', color='Community',
+    fig = px.scatter(filtered_df_1, x='SqFt', y='avg_sold_price', color='Community',
                      size='units',# hover_name='Community',
                      hover_data=['Bedrooms','Floor_Category','Exposure','units','avg_DOM'],
                      labels={'SqFt': 'Square Feet', 'Sold Price': 'Average Sold Price'},
@@ -192,8 +307,65 @@ def update_scatter_plot(selected_communities, selected_bedrooms, selected_sqft, 
             orientation='h',
             yanchor='bottom',
             y=1,  # Adjust y position to move the legend above the title
-            xanchor='right',
-            x=1,
+            xanchor='left',
+            x=0,
+            title='',
+            font=dict(size=10)
+        )
+    )
+    return fig
+
+# Callback to update scatter plot based on slicer values for tab-2
+# Define callback to update scatter plot based on slicer values
+@app.callback(
+    Output('scatter-plot-2', 'figure'),
+    [Input('community-filter-2', 'value'),
+     Input('short-address-filter-2', 'value'),
+     Input('bedroom-filter-2', 'value'),
+     Input('sqft-filter-2', 'value'),
+     Input('exposure-filter-2', 'value'),
+     Input('floor-category-filter-2', 'value')]
+)
+
+def update_scatter_plot_2(selected_communities, selected_short_address,selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category):
+    filtered_df_2 = grouped_df_2[grouped_df_2['Community'].isin(selected_communities) & 
+                             grouped_df_2['Short Address'].isin(selected_short_address) & 
+                             grouped_df_2['Bedrooms'].isin(selected_bedrooms) & 
+                             grouped_df_2['SqFt'].isin(selected_sqft) &
+                             grouped_df_2['Exposure'].isin(selected_exposure) &
+                             grouped_df_2['Floor_Category'].isin(selected_floor_category)]
+    
+
+    def extract_lower_bound(s):
+        try:
+            return int(s.split('-')[0])
+        except ValueError:
+            return 0  # If the value is not convertible to an integer, return 0
+
+
+    sorted_x_values = sorted(filtered_df_2['Short Address'].unique(), key=extract_lower_bound)
+    
+    
+    fig = px.scatter(filtered_df_2, x='Short Address', y='avg_sold_price', color='Short Address',
+                     size='units',# hover_name='Community',
+                     hover_data=['SqFt','Bedrooms','Floor_Category','Exposure','units','avg_DOM'],
+                     labels={'Short Address': 'Address', 'Sold Price': 'Average Sold Price'},
+                     title='Average Sold Price by Address')
+    
+    
+
+
+    fig.update_yaxes(range=[300000, 2000000], tickformat='$,.0f', dtick=200000)
+    fig.update_xaxes(categoryorder='array', categoryarray=sorted_x_values)
+    fig.update_layout(
+        height=600,
+        margin=dict(t=100),  # Add margin to the top
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1,  # Adjust y position to move the legend above the title
+            xanchor='left',
+            x=0,
             title='',
             font=dict(size=10)
         )
