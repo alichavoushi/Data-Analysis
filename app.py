@@ -126,8 +126,8 @@ app.config.suppress_callback_exceptions = True
 # Define the layout of the web application
 app.layout = html.Div([
     dcc.Tabs(id='tabs', value='tab-1', children=[
-        dcc.Tab(label='Scatter Plot 1', value='tab-1'),
-        dcc.Tab(label='Scatter Plot 2', value='tab-2'),
+        dcc.Tab(label='2024 YTD Sold Analysis by Community and Unit Details', value='tab-1'),
+        dcc.Tab(label='2024 YTD Sold Analysis by Address and Unit details', value='tab-2'),
     ]),
     html.Div(id='tabs-content')
 ])
@@ -185,7 +185,7 @@ def render_content(tab):
         ])
     elif tab == 'tab-2':
         return html.Div([
-            html.Label('Select Community2:'),
+            html.Label('Select Community:'),
             dcc.Dropdown(
                 id='community-filter-2',
                 options=community_options_2,
