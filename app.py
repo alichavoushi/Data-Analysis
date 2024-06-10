@@ -140,7 +140,7 @@ app.layout = html.Div([
 def render_content(tab):
     if tab == 'tab-1':
         return html.Div([
-            html.Label('Select Community:'),
+            html.Label('Select Community:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='community-filter-1',
                 options=community_options_1,
@@ -149,7 +149,7 @@ def render_content(tab):
                 multi=True,  # Allow multiple selections
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
-            html.Label('Select Bedrooms:'),
+            html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='bedroom-filter-1',
                 options=bedroom_options_1,
@@ -157,7 +157,7 @@ def render_content(tab):
                 multi=True,  # Allow multiple selections
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
-            html.Label('Select SqFt:'),
+            html.Label('Select SqFt:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='sqft-filter-1',
                 options=sqft_options_1,
@@ -165,7 +165,7 @@ def render_content(tab):
                 multi=True,  # Allow multiple selections
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
-            html.Label('Select Exposure:'),
+            html.Label('Select Exposure:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='exposure-filter-1',
                 options=exposure_options_1,
@@ -173,7 +173,7 @@ def render_content(tab):
                 multi=True,  # Allow multiple selections
                 style={'font-size': 'smaller', 'width': '100%'}  # Adjust font size
             ),
-            html.Label('Select Floor Category:'),
+            html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='floor-category-filter-1',
                 options=floor_category_options_1,
@@ -185,7 +185,7 @@ def render_content(tab):
         ])
     elif tab == 'tab-2':
         return html.Div([
-            html.Label('Select Community:'),
+            html.Label('Select Community:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='community-filter-2',
                 options=community_options_2,
@@ -194,7 +194,7 @@ def render_content(tab):
                 multi=True,  # Allow multiple selections
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
-            html.Label('Select Address:'),
+            html.Label('Select Address:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='short-address-filter-2',
                 #options=short_address_options_2,
@@ -202,7 +202,7 @@ def render_content(tab):
                 multi=True,  # Allow multiple selections
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
-            html.Label('Select Bedrooms:'),
+            html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='bedroom-filter-2',
                 options=bedroom_options_2,
@@ -210,7 +210,7 @@ def render_content(tab):
                 multi=True,  # Allow multiple selections
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
-            html.Label('Select SqFt:'),
+            html.Label('Select SqFt:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='sqft-filter-2',
                 options=sqft_options_2,
@@ -218,7 +218,7 @@ def render_content(tab):
                 multi=True,  # Allow multiple selections
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
-            html.Label('Select Exposure:'),
+            html.Label('Select Exposure:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='exposure-filter-2',
                 options=exposure_options_2,
@@ -226,7 +226,7 @@ def render_content(tab):
                 multi=True,  # Allow multiple selections
                 style={'font-size': 'smaller', 'width': '100%'}  # Adjust font size
             ),
-            html.Label('Select Floor Category:'),
+            html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='floor-category-filter-2',
                 options=floor_category_options_2,
