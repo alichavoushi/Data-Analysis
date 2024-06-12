@@ -15,6 +15,7 @@ df1 = pd.DataFrame(df)
 df1['Apt/Unit #'] = df1['Apt/Unit #'].str.replace('#', '')
 df1.fillna({'Street #': '', 'Street Name': ''}, inplace=True)
 df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(str)
+df1['Sold Price'] = pd.to_numeric(df1['Sold Price'], errors='coerce')
 
 def calculate_floor(row):
     unit = str(row['Apt/Unit #'])   
@@ -67,37 +68,62 @@ def categorize_floor(floor):
 # Apply categorization to create a new column 'Floor Category'
 df1['Floor_Category'] = df1['Floor'].apply(categorize_floor)
 
-df1['Sold Price'] = pd.to_numeric(df1['Sold Price'], errors='coerce')
+def map_sqft_to_category(sqft):
+    if pd.isna(sqft):
+        return 'Unknown'
+    elif sqft in ['0-499', '500-599', '600-699']:
+        return '<700'
+    elif sqft in ['700-799', '800-899']:
+        return '700-900'
+    elif sqft in ['900-999', '1000-1099', '1100-1199']:
+        return '900-1200'
+    elif sqft in ['1200-1399', '1400-1599', '1600-1799', '1800-1999', '2000+']:
+        return '1200+'
+    else:
+        return 'Unknown'
+
+df1['SqFt_Category'] = df1['SqFt'].apply(map_sqft_to_category)
+
+# Expoure Category
+def map_exposure_to_category(exposure):
+    
+    if exposure in ['N', 'Ne', 'Nw']:
+        return 'N-Ne-Nw'
+    elif exposure in ['S', 'Sw', 'Se','Ns']:
+        return 'S-Se-Sw'
+    elif exposure in ['E', 'W', 'Ew']:
+        return 'E-W-Ew'
+    else:
+        return 'Unknown'
+
+df1['Exposure_Category'] = df1['Exposure'].apply(map_exposure_to_category)
 
 condition = (df1['Status'] == 'Sold') & (df1['Municipality District'] == 'Toronto C01')& (df1['Sold Price'] < 2000000)
 
-filtered_selected_columns = df1[condition][['Community', 'Short Address','Bedrooms', 'SqFt', 'Sold Price','DOM','Exposure','Floor_Category']]
+filtered_selected_columns = df1[condition][['Community', 'Short Address','Bedrooms', 'SqFt_Category', 'Sold Price','DOM','Exposure_Category','Floor_Category']]
 # Convert 'Sold Price' column to numeric
 filtered_selected_columns['Sold Price'] = pd.to_numeric(filtered_selected_columns['Sold Price'], errors='coerce')
 filtered_selected_columns['DOM'] = pd.to_numeric(filtered_selected_columns['DOM'], errors='coerce')
-#filtered_selected_columns.to_csv(r'C:\TRREB ANALYSIS\filtered_selected_columns.csv', encoding='ISO-8859-1')
-filtered_selected_columns.dropna(subset=['SqFt'], inplace=True)
-filtered_selected_columns['Exposure'].fillna('Unknown', inplace=True)
-filtered_selected_columns['SqFt'] = filtered_selected_columns['SqFt'].astype(str)
+#filtered_selected_columns.dropna(subset=['SqFt'], inplace=True)
+#filtered_selected_columns['Exposure'].fillna('Unknown', inplace=True)
+#filtered_selected_columns['SqFt'] = filtered_selected_columns['SqFt'].astype(str)
 filtered_selected_columns['Community'] = filtered_selected_columns['Community'].astype(str)
-filtered_selected_columns['Exposure'] = filtered_selected_columns['Exposure'].astype(str)
+#filtered_selected_columns['Exposure'] = filtered_selected_columns['Exposure'].astype(str)
 
-grouped_df_1 = filtered_selected_columns.groupby(['Community', 'Bedrooms', 'SqFt','Exposure','Floor_Category']).agg(
+grouped_df_1 = filtered_selected_columns.groupby(['Community', 'SqFt_Category','Bedrooms', 'Floor_Category','Exposure_Category']).agg(
     avg_sold_price=('Sold Price', 'mean'),
     avg_DOM=('DOM', 'mean'),
     units=('Community', 'size')
 ).reset_index()
-
 
 grouped_df_1['avg_sold_price'] = np.ceil(grouped_df_1['avg_sold_price'])
 grouped_df_1['avg_DOM'] = np.ceil(grouped_df_1['avg_DOM'])
 
-grouped_df_2 = filtered_selected_columns.groupby(['Community', 'Short Address','Bedrooms', 'SqFt','Exposure','Floor_Category']).agg(
+grouped_df_2 = filtered_selected_columns.groupby(['Community', 'Short Address','SqFt_Category','Bedrooms','Floor_Category','Exposure_Category']).agg(
     avg_sold_price=('Sold Price', 'mean'),
     avg_DOM=('DOM', 'mean'),
     units=('Community', 'size')
 ).reset_index()
-
 
 grouped_df_2['avg_sold_price'] = np.ceil(grouped_df_2['avg_sold_price'])
 grouped_df_2['avg_DOM'] = np.ceil(grouped_df_2['avg_DOM'])
@@ -105,17 +131,15 @@ grouped_df_2['avg_DOM'] = np.ceil(grouped_df_2['avg_DOM'])
 # Define slicers (dropdowns) for filtering data tab-1
 community_options_1 = [{'label': community, 'value': community} for community in grouped_df_1['Community'].unique()]
 bedroom_options_1 = [{'label': str(bedroom), 'value': bedroom} for bedroom in grouped_df_1['Bedrooms'].unique()]
-sqft_options_1 = [{'label': sqft, 'value': sqft} for sqft in grouped_df_1['SqFt'].unique()]
-exposure_options_1 = [{'label': exposure, 'value': exposure} for exposure in grouped_df_1['Exposure'].unique()]
+sqft_options_1 = [{'label': sqft, 'value': sqft} for sqft in grouped_df_1['SqFt_Category'].unique()]
+exposure_options_1 = [{'label': exposure, 'value': exposure} for exposure in grouped_df_1['Exposure_Category'].unique()]
 floor_category_options_1 = [{'label': floor_category, 'value': floor_category} for floor_category in grouped_df_1['Floor_Category'].unique()]
-
-
 
 # Define slicers (dropdowns) for filtering data tab-2
 community_options_2 = [{'label': community, 'value': community} for community in grouped_df_2['Community'].unique()]
 bedroom_options_2 = [{'label': str(bedroom), 'value': bedroom} for bedroom in grouped_df_2['Bedrooms'].unique()]
-sqft_options_2 = [{'label': sqft, 'value': sqft} for sqft in grouped_df_2['SqFt'].unique()]
-exposure_options_2 = [{'label': exposure, 'value': exposure} for exposure in grouped_df_2['Exposure'].unique()]
+sqft_options_2 = [{'label': sqft, 'value': sqft} for sqft in grouped_df_2['SqFt_Category'].unique()]
+exposure_options_2 = [{'label': exposure, 'value': exposure} for exposure in grouped_df_2['Exposure_Category'].unique()]
 floor_category_options_2 = [{'label': floor_category, 'value': floor_category} for floor_category in grouped_df_2['Floor_Category'].unique()]
 short_address_options_2 = [{'label': short_address, 'value': short_address} for short_address in grouped_df_2['Short Address'].unique()]
 
@@ -197,8 +221,6 @@ def render_content(tab):
             html.Label('Select Address:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='short-address-filter-2',
-                #options=short_address_options_2,
-                #value=[option['value'] for option in short_address_options_2],  # Set default value to all communities
                 multi=True,  # Allow multiple selections
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
@@ -251,12 +273,9 @@ def set_short_address_options(selected_communities):
         filtered_df = grouped_df_2[grouped_df_2['Community'].isin(selected_communities)]
     
     short_address_options = [{'label': short_address, 'value': short_address} for short_address in filtered_df['Short Address'].unique()]
-    
-    # Debug: Print filtered short address options
-    #print("Filtered Short Address Options: ", short_address_options)
+
     
     return short_address_options, [option['value'] for option in short_address_options]
-
 
 # Callback to update scatter plot based on slicer values for tab-1
 # Define callback to update scatter plot based on slicer values
@@ -272,31 +291,21 @@ def set_short_address_options(selected_communities):
 def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category):
     filtered_df_1 = grouped_df_1[grouped_df_1['Community'].isin(selected_communities) & 
                              grouped_df_1['Bedrooms'].isin(selected_bedrooms) & 
-                             grouped_df_1['SqFt'].isin(selected_sqft) &
-                             grouped_df_1['Exposure'].isin(selected_exposure) &
+                             grouped_df_1['SqFt_Category'].isin(selected_sqft) &
+                             grouped_df_1['Exposure_Category'].isin(selected_exposure) &
                              grouped_df_1['Floor_Category'].isin(selected_floor_category)]
     
-#def update_scatter_plot(selected_communities, selected_bedrooms):
- #   filtered_df = grouped_df[grouped_df['Community'].isin(selected_communities) & grouped_df['Bedrooms'].isin(selected_bedrooms)]
-    #filtered_df = filtered_df[filtered_df['SqFt'] != 0]
-    def extract_lower_bound(s):
-        try:
-            return int(s.split('-')[0])
-        except ValueError:
-            return 0  # If the value is not convertible to an integer, return 0
 
-
-    sorted_x_values = sorted(filtered_df_1['SqFt'].unique(), key=extract_lower_bound)
+    custom_order = ['<700', '700-900', '900-1200', '1200+','Unknown']
+        
+        # Sort the unique values of the 'SqFt_Category' column based on the custom order
+    sorted_x_values = sorted(grouped_df_1['SqFt_Category'].unique(), key=lambda x: custom_order.index(x))
     
-    
-    fig = px.scatter(filtered_df_1, x='SqFt', y='avg_sold_price', color='Community',
+    fig = px.scatter(filtered_df_1, x='SqFt_Category', y='avg_sold_price', color='Community',
                      size='units',# hover_name='Community',
-                     hover_data=['Bedrooms','Floor_Category','Exposure','units','avg_DOM'],
-                     labels={'SqFt': 'Square Feet', 'Sold Price': 'Average Sold Price'},
+                     hover_data=['Bedrooms','Floor_Category','Exposure_Category','units','avg_DOM'],
+                     labels={'SqFt_Category': 'Square Feet', 'Sold Price': 'Average Sold Price'},
                      title='Average Sold Price by Square Feet and Community')
-    
-    
-
 
     fig.update_yaxes(range=[300000, 2000000], tickformat='$,.0f', dtick=200000)
     fig.update_xaxes(categoryorder='array', categoryarray=sorted_x_values)
@@ -331,32 +340,18 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
     filtered_df_2 = grouped_df_2[grouped_df_2['Community'].isin(selected_communities) & 
                              grouped_df_2['Short Address'].isin(selected_short_address) & 
                              grouped_df_2['Bedrooms'].isin(selected_bedrooms) & 
-                             grouped_df_2['SqFt'].isin(selected_sqft) &
-                             grouped_df_2['Exposure'].isin(selected_exposure) &
+                             grouped_df_2['SqFt_Category'].isin(selected_sqft) &
+                             grouped_df_2['Exposure_Category'].isin(selected_exposure) &
                              grouped_df_2['Floor_Category'].isin(selected_floor_category)]
-    
-
-    def extract_lower_bound(s):
-        try:
-            return int(s.split('-')[0])
-        except ValueError:
-            return 0  # If the value is not convertible to an integer, return 0
-
-
-    sorted_x_values = sorted(filtered_df_2['Short Address'].unique(), key=extract_lower_bound)
-    
-    
+ 
     fig = px.scatter(filtered_df_2, x='Short Address', y='avg_sold_price', color='Short Address',
                      size='units',# hover_name='Community',
-                     hover_data=['SqFt','Bedrooms','Floor_Category','Exposure','units','avg_DOM'],
+                     hover_data=['SqFt_Category','Bedrooms','Floor_Category','Exposure_Category','units','avg_DOM'],
                      labels={'Short Address': 'Address', 'Sold Price': 'Average Sold Price'},
                      title='Average Sold Price by Address')
-    
-    
-
 
     fig.update_yaxes(range=[300000, 2000000], tickformat='$,.0f', dtick=200000)
-    fig.update_xaxes(categoryorder='array', categoryarray=sorted_x_values)
+    #fig.update_xaxes(categoryorder='array', categoryarray=sorted_x_values)
     fig.update_layout(
         height=600,
         margin=dict(t=100),  # Add margin to the top
