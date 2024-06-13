@@ -74,9 +74,9 @@ def map_sqft_to_category(sqft):
     elif sqft in ['0-499', '500-599', '600-699']:
         return '<700'
     elif sqft in ['700-799', '800-899']:
-        return '700-900'
+        return '700-899'
     elif sqft in ['900-999', '1000-1099', '1100-1199']:
-        return '900-1200'
+        return '900-1199'
     elif sqft in ['1200-1399', '1400-1599', '1600-1799', '1800-1999', '2000+']:
         return '1200+'
     else:
@@ -205,8 +205,15 @@ def render_content(tab):
                 multi=True,  # Allow multiple selections
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
-            dcc.Graph(id='scatter-plot-1', style={'height': '80vh'})  # Set height using viewport units
+            html.Div([
+                html.Div([
+                    dcc.Graph(id='scatter-plot-1', style={'height': '80vh'}), # Set height using viewport units
+                    html.Div(id='unit-count-1', style={'font-size': 'larger', 'font-weight': 'bold', 'margin-top': '20px'}),
+                ], style={'width': '100%', 'display': 'inline-block'}),
+            ])
+                        
         ])
+                                
     elif tab == 'tab-2':
         return html.Div([
             html.Label('Select Community:', style={'font-size': 'smaller'}),
@@ -256,7 +263,13 @@ def render_content(tab):
                 multi=True,  # Allow multiple selections
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
-            dcc.Graph(id='scatter-plot-2', style={'height': '80vh'})  # Set height using viewport units
+            
+            html.Div([
+                html.Div([
+                    dcc.Graph(id='scatter-plot-2', style={'height': '80vh'}),  # Set height using viewport units
+                    html.Div(id='unit-count-2', style={'font-size': 'larger', 'font-weight': 'bold', 'margin-top': '20px'}),
+                ], style={'width': '100%', 'display': 'inline-block'}),
+            ])
         ])
 
 
@@ -280,7 +293,8 @@ def set_short_address_options(selected_communities):
 # Callback to update scatter plot based on slicer values for tab-1
 # Define callback to update scatter plot based on slicer values
 @app.callback(
-    Output('scatter-plot-1', 'figure'),
+    [Output('scatter-plot-1', 'figure'),
+    Output('unit-count-1', 'children')],
     [Input('community-filter-1', 'value'),
      Input('bedroom-filter-1', 'value'),
      Input('sqft-filter-1', 'value'),
@@ -295,8 +309,10 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
                              grouped_df_1['Exposure_Category'].isin(selected_exposure) &
                              grouped_df_1['Floor_Category'].isin(selected_floor_category)]
     
-
-    custom_order = ['<700', '700-900', '900-1200', '1200+','Unknown']
+    units_sold = filtered_df_1['units'].sum()
+    unit_count_text = f"Total Units Sold: {units_sold}"
+        
+    custom_order = ['<700', '700-899', '900-1199', '1200+','Unknown']
         
         # Sort the unique values of the 'SqFt_Category' column based on the custom order
     sorted_x_values = sorted(grouped_df_1['SqFt_Category'].unique(), key=lambda x: custom_order.index(x))
@@ -320,14 +336,26 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
             x=0,
             title='',
             font=dict(size=10)
-        )
+        ),
+        annotations=[
+            dict(
+                x=1,
+                y=1,
+                xref='paper',
+                yref='paper',
+                text=unit_count_text,
+                showarrow=False,
+                font=dict(size=10)
+            )
+        ]
     )
-    return fig
+    return fig, None #unit_count_text
 
 # Callback to update scatter plot based on slicer values for tab-2
 # Define callback to update scatter plot based on slicer values
 @app.callback(
-    Output('scatter-plot-2', 'figure'),
+    [Output('scatter-plot-2', 'figure'),
+    Output('unit-count-2', 'children')],
     [Input('community-filter-2', 'value'),
      Input('short-address-filter-2', 'value'),
      Input('bedroom-filter-2', 'value'),
@@ -344,6 +372,9 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
                              grouped_df_2['Exposure_Category'].isin(selected_exposure) &
                              grouped_df_2['Floor_Category'].isin(selected_floor_category)]
  
+    units_sold = filtered_df_2['units'].sum()
+    unit_count_text = f"Total Units Sold: {units_sold}"   
+    
     fig = px.scatter(filtered_df_2, x='Short Address', y='avg_sold_price', color='Short Address',
                      size='units',# hover_name='Community',
                      hover_data=['SqFt_Category','Bedrooms','Floor_Category','Exposure_Category','units','avg_DOM'],
@@ -363,9 +394,21 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
             x=0,
             title='',
             font=dict(size=10)
-        )
+        ),
+        annotations=[
+            dict(
+                x=1,
+                y=1,
+                xref='paper',
+                yref='paper',
+                text=unit_count_text,
+                showarrow=False,
+                font=dict(size=10)
+            )
+        ]
+        
     )
-    return fig
+    return fig, None #unit_count_text
 
 if __name__ == '__main__':
     app.run_server(debug=True)
