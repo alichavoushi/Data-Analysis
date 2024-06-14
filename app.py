@@ -5,6 +5,8 @@ from dash import Dash, dcc, html
 from dash.dependencies import Output, Input
 from dash import dcc, html, Input, Output
 import os
+# this
+google_api_key = os.getenv('GOOGLE_API_KEY')
 
 url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
 
@@ -283,7 +285,7 @@ def render_content(tab):
                         <html>
                         <head>
                             <title>Simple Map</title>
-                            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
+                            <script src="https://maps.googleapis.com/maps/api/js?key={google_api_key}&callback=initMap" async defer></script>
                             <script>
                                 function initMap() {
                                     var map = new google.maps.Map(document.getElementById('map'), {
