@@ -1,5 +1,4 @@
 dash
-os
 numpy
 pandas
 plotly
