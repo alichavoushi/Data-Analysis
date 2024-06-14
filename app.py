@@ -7,6 +7,7 @@ from dash import dcc, html, Input, Output
 import os
 # this
 google_api_key = os.getenv('GOOGLE_API_KEY')
+print(google_api_key)
 
 url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
 
