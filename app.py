@@ -7,7 +7,6 @@ from dash import dcc, html, Input, Output
 import os
 # this
 google_api_key = os.getenv('GOOGLE_API_KEY')
-print(google_api_key)
 
 url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
 
@@ -413,7 +412,8 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
                              grouped_df_2['Floor_Category'].isin(selected_floor_category)]
  
     units_sold = filtered_df_2['units'].sum()
-    unit_count_text = f"Total Units Sold: {units_sold}"   
+    unit_count_text = f"Total Units Sold: {units_sold}" 
+    print (google_api_key)
     
     fig = px.scatter(filtered_df_2, x='Short Address', y='avg_sold_price', color='Short Address',
                      size='units',# hover_name='Community',
