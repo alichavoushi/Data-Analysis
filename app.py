@@ -413,7 +413,6 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
  
     units_sold = filtered_df_2['units'].sum()
     unit_count_text = f"Total Units Sold: {units_sold}" 
-    print (google_api_key)
     
     fig = px.scatter(filtered_df_2, x='Short Address', y='avg_sold_price', color='Short Address',
                      size='units',# hover_name='Community',
