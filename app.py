@@ -152,6 +152,7 @@ app.layout = html.Div([
     dcc.Tabs(id='tabs', value='tab-1', children=[
         dcc.Tab(label='2024 YTD Sold Analysis by Community and Unit Details', value='tab-1'),
         dcc.Tab(label='2024 YTD Sold Analysis by Address and Unit details', value='tab-2'),
+        dcc.Tab(label='Map View', value='tab-3'),
     ]),
     html.Div(id='tabs-content')
 ])
@@ -271,7 +272,43 @@ def render_content(tab):
                 ], style={'width': '100%', 'display': 'inline-block'}),
             ])
         ])
+    elif tab == 'tab-3':
+        return html.Div([
+            html.H3('Google Map'),
+            html.Div(id='map', children=[
+                html.Iframe(
+                    id='map-frame',
+                    srcDoc='''
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Simple Map</title>
+                            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCwxSWlQrC88QiATnRgwtrdDlrF2WjA6vM&callback=initMap" async defer></script>
+                            <script>
+                                function initMap() {
+                                    var map = new google.maps.Map(document.getElementById('map'), {
+                                        zoom: 12,
+                                        center: {lat: 43.65107, lng: -79.347015}
+                                    });
 
+                                    var marker = new google.maps.Marker({
+                                        position: {lat: 43.65107, lng: -79.347015},
+                                        map: map,
+                                        title: 'Hello Toronto!'
+                                    });
+                                }
+                            </script>
+                        </head>
+                        <body onload="initMap()">
+                            <div id="map" style="height: 500px; width: 100%;"></div>
+                        </body>
+                        </html>
+                    ''',
+                    width='100%',
+                    height='500'
+                )
+            ])
+    ])
 
 # Callback to update the options for short address based on selected community
 @app.callback(
