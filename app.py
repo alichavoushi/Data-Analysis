@@ -283,7 +283,7 @@ def render_content(tab):
                         <html>
                         <head>
                             <title>Simple Map</title>
-                            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCwxSWlQrC88QiATnRgwtrdDlrF2WjA6vM&callback=initMap" async defer></script>
+                            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
                             <script>
                                 function initMap() {
                                     var map = new google.maps.Map(document.getElementById('map'), {
