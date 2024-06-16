@@ -1,6 +1,4 @@
 dash
-collections
-json
 numpy
 pandas
 plotly
