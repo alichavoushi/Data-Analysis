@@ -4,13 +4,20 @@ import plotly.express as px
 from dash import Dash, dcc, html
 from dash.dependencies import Output, Input
 from dash import dcc, html, Input, Output
+from collections import defaultdict
+import json
+#from geopy.geocoders import GoogleV3
+#from geopy.extra.rate_limiter import RateLimiter
 import os
-# this
-google_api_key = os.getenv('GOOGLE_API_KEY')
 
-url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
+#google_api_key = os.getenv('GOOGLE_API_KEY')
+ 
 
-df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
+#google_api_key = os.getenv('GOOGLE_API_KEY')
+
+#url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
+df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_trial_geo.csv', encoding='ISO-8859-1')
+#df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
 
 # Create a DataFrame
 df1 = pd.DataFrame(df)
@@ -18,6 +25,8 @@ df1['Apt/Unit #'] = df1['Apt/Unit #'].str.replace('#', '')
 df1.fillna({'Street #': '', 'Street Name': ''}, inplace=True)
 df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(str)
 df1['Sold Price'] = pd.to_numeric(df1['Sold Price'], errors='coerce')
+df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(str)+" st, Toronto, ON, Canada"
+# Initialize geocoder
 
 def calculate_floor(row):
     unit = str(row['Apt/Unit #'])   
@@ -102,7 +111,7 @@ df1['Exposure_Category'] = df1['Exposure'].apply(map_exposure_to_category)
 
 condition = (df1['Status'] == 'Sold') & (df1['Municipality District'] == 'Toronto C01')& (df1['Sold Price'] < 2000000)
 
-filtered_selected_columns = df1[condition][['Community', 'Short Address','Bedrooms', 'SqFt_Category', 'Sold Price','DOM','Exposure_Category','Floor_Category']]
+filtered_selected_columns = df1[condition][['Community', 'Short Address','Bedrooms', 'SqFt_Category', 'Sold Price','DOM','Exposure_Category','Floor_Category','Latitude','Longitude']]
 # Convert 'Sold Price' column to numeric
 filtered_selected_columns['Sold Price'] = pd.to_numeric(filtered_selected_columns['Sold Price'], errors='coerce')
 filtered_selected_columns['DOM'] = pd.to_numeric(filtered_selected_columns['DOM'], errors='coerce')
@@ -121,7 +130,7 @@ grouped_df_1 = filtered_selected_columns.groupby(['Community', 'SqFt_Category','
 grouped_df_1['avg_sold_price'] = np.ceil(grouped_df_1['avg_sold_price'])
 grouped_df_1['avg_DOM'] = np.ceil(grouped_df_1['avg_DOM'])
 
-grouped_df_2 = filtered_selected_columns.groupby(['Community', 'Short Address','SqFt_Category','Bedrooms','Floor_Category','Exposure_Category']).agg(
+grouped_df_2 = filtered_selected_columns.groupby(['Community', 'Short Address','SqFt_Category','Bedrooms','Floor_Category','Exposure_Category','Latitude','Longitude']).agg(
     avg_sold_price=('Sold Price', 'mean'),
     avg_DOM=('DOM', 'mean'),
     units=('Community', 'size')
@@ -172,51 +181,48 @@ def render_content(tab):
                 id='community-filter-1',
                 options=community_options_1,
                 value=['University'],
-                #value=[option['value'] for option in community_options_1],  # Set default value to all communities
-                multi=True,  # Allow multiple selections
+                multi=True,
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
             html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='bedroom-filter-1',
                 options=bedroom_options_1,
-                value=[option['value'] for option in bedroom_options_1],  # Set default value to all bedrooms
-                multi=True,  # Allow multiple selections
+                value=[option['value'] for option in bedroom_options_1],
+                multi=True,
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
             html.Label('Select SqFt:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='sqft-filter-1',
                 options=sqft_options_1,
-                value=[option['value'] for option in sqft_options_1],  # Set default value to all SqFt
-                multi=True,  # Allow multiple selections
+                value=[option['value'] for option in sqft_options_1],
+                multi=True,
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
             html.Label('Select Exposure:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='exposure-filter-1',
                 options=exposure_options_1,
-                value=[option['value'] for option in exposure_options_1],  # Set default value to all Exposures
-                multi=True,  # Allow multiple selections
-                style={'font-size': 'smaller', 'width': '100%'}  # Adjust font size
+                value=[option['value'] for option in exposure_options_1],
+                multi=True,
+                style={'font-size': 'smaller', 'width': '100%'}
             ),
             html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='floor-category-filter-1',
                 options=floor_category_options_1,
-                value=[option['value'] for option in floor_category_options_1],  # Set default value to all Floor Categories
-                multi=True,  # Allow multiple selections
+                value=[option['value'] for option in floor_category_options_1],
+                multi=True,
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
             html.Div([
                 html.Div([
-                    dcc.Graph(id='scatter-plot-1', style={'height': '80vh'}), # Set height using viewport units
+                    dcc.Graph(id='scatter-plot-1', style={'height': '80vh'}),
                     html.Div(id='unit-count-1', style={'font-size': 'larger', 'font-weight': 'bold', 'margin-top': '20px'}),
                 ], style={'width': '100%', 'display': 'inline-block'}),
             ])
-                        
         ])
-                                
     elif tab == 'tab-2':
         return html.Div([
             html.Label('Select Community:', style={'font-size': 'smaller'}),
@@ -224,52 +230,52 @@ def render_content(tab):
                 id='community-filter-2',
                 options=community_options_2,
                 value=['University'],
-                #value=[option['value'] for option in community_options_2],  # Set default value to all communities
-                multi=True,  # Allow multiple selections
+                multi=True,
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
             html.Label('Select Address:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='short-address-filter-2',
-                multi=True,  # Allow multiple selections
+                options=short_address_options_2,
+                value=[option['value'] for option in short_address_options_2],
+                multi=True,
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
             html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='bedroom-filter-2',
                 options=bedroom_options_2,
-                value=[option['value'] for option in bedroom_options_2],  # Set default value to all bedrooms
-                multi=True,  # Allow multiple selections
+                value=[option['value'] for option in bedroom_options_2],
+                multi=True,
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
             html.Label('Select SqFt:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='sqft-filter-2',
                 options=sqft_options_2,
-                value=[option['value'] for option in sqft_options_2],  # Set default value to all SqFt
-                multi=True,  # Allow multiple selections
+                value=[option['value'] for option in sqft_options_2],
+                multi=True,
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
             html.Label('Select Exposure:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='exposure-filter-2',
                 options=exposure_options_2,
-                value=[option['value'] for option in exposure_options_2],  # Set default value to all Exposures
-                multi=True,  # Allow multiple selections
-                style={'font-size': 'smaller', 'width': '100%'}  # Adjust font size
+                value=[option['value'] for option in exposure_options_2],
+                multi=True,
+                style={'font-size': 'smaller', 'width': '100%'}
             ),
             html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='floor-category-filter-2',
                 options=floor_category_options_2,
-                value=[option['value'] for option in floor_category_options_2],  # Set default value to all Floor Categories
-                multi=True,  # Allow multiple selections
+                value=[option['value'] for option in floor_category_options_2],
+                multi=True,
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
-            
             html.Div([
                 html.Div([
-                    dcc.Graph(id='scatter-plot-2', style={'height': '80vh'}),  # Set height using viewport units
+                    dcc.Graph(id='scatter-plot-2', style={'height': '80vh'}),
                     html.Div(id='unit-count-2', style={'font-size': 'larger', 'font-weight': 'bold', 'margin-top': '20px'}),
                 ], style={'width': '100%', 'display': 'inline-block'}),
             ])
@@ -277,6 +283,56 @@ def render_content(tab):
     elif tab == 'tab-3':
         return html.Div([
             html.H3('Google Map'),
+            html.Div([
+                html.Label('Select Community:', style={'font-size': 'smaller'}),
+                dcc.Dropdown(
+                    id='community-filter-3',
+                    options=community_options_2,
+                    value=['University'],
+                    multi=True,
+                    style={'font-size': 'smaller', 'width': '100%'}
+                ),
+                html.Label('Select Address:', style={'font-size': 'smaller'}),
+                dcc.Dropdown(
+                    id='short-address-filter-3',
+                    options=short_address_options_2,
+                    value=[option['value'] for option in short_address_options_2],
+                    multi=True,
+                    style={'font-size': 'smaller', 'width': '100%'}
+                ),
+                html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
+                dcc.Dropdown(
+                    id='bedroom-filter-3',
+                    options=bedroom_options_2,
+                    value=[option['value'] for option in bedroom_options_2],
+                    multi=True,
+                    style={'font-size': 'smaller', 'width': '100%'}
+                ),
+                html.Label('Select SqFt:', style={'font-size': 'smaller'}),
+                dcc.Dropdown(
+                    id='sqft-filter-3',
+                    options=sqft_options_2,
+                    value=[option['value'] for option in sqft_options_2],
+                    multi=True,
+                    style={'font-size': 'smaller', 'width': '100%'}
+                ),
+                html.Label('Select Exposure:', style={'font-size': 'smaller'}),
+                dcc.Dropdown(
+                    id='exposure-filter-3',
+                    options=exposure_options_2,
+                    value=[option['value'] for option in exposure_options_2],
+                    multi=True,
+                    style={'font-size': 'smaller', 'width': '100%'}
+                ),
+                html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
+                dcc.Dropdown(
+                    id='floor-category-filter-3',
+                    options=floor_category_options_2,
+                    value=[option['value'] for option in floor_category_options_2],
+                    multi=True,
+                    style={'font-size': 'smaller', 'width': '100%'}
+                ),
+            ]),
             html.Div(id='map', children=[
                 html.Iframe(
                     id='map-frame',
@@ -284,8 +340,8 @@ def render_content(tab):
                         <!DOCTYPE html>
                         <html>
                         <head>
-                            <title>Simple Map</title>
-                            <script src="https://maps.googleapis.com/maps/api/js?key={google_api_key}&callback=initMap" async defer></script>
+                            <title>Addresses Map</title>
+                            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
                             <script>
                                 function initMap() {
                                     var map = new google.maps.Map(document.getElementById('map'), {
@@ -293,11 +349,7 @@ def render_content(tab):
                                         center: {lat: 43.65107, lng: -79.347015}
                                     });
 
-                                    var marker = new google.maps.Marker({
-                                        position: {lat: 43.65107, lng: -79.347015},
-                                        map: map,
-                                        title: 'Hello Toronto!'
-                                    });
+                                    
                                 }
                             </script>
                         </head>
@@ -310,24 +362,130 @@ def render_content(tab):
                     height='500'
                 )
             ])
-    ])
+        ])
 
-# Callback to update the options for short address based on selected community
+
 @app.callback(
-    Output('short-address-filter-2', 'options'),
-    Output('short-address-filter-2', 'value'),
-    Input('community-filter-2', 'value')
+    [Output('short-address-filter-3', 'options'),
+    Output('short-address-filter-3', 'value')],
+    Input('community-filter-3', 'value')
 )
-def set_short_address_options(selected_communities):
+
+def set_short_address_options_3(selected_communities):
     if not selected_communities:
         filtered_df = grouped_df_2
     else:
         filtered_df = grouped_df_2[grouped_df_2['Community'].isin(selected_communities)]
     
     short_address_options = [{'label': short_address, 'value': short_address} for short_address in filtered_df['Short Address'].unique()]
-
-    
+   
     return short_address_options, [option['value'] for option in short_address_options]
+
+@app.callback(
+    Output('map-frame', 'srcDoc'),
+    [Input('community-filter-3', 'value'),
+    Input('short-address-filter-3', 'value'),
+    Input('bedroom-filter-3', 'value'),
+    Input('sqft-filter-3', 'value'),
+    Input('exposure-filter-3', 'value'),
+    Input('floor-category-filter-3', 'value')]
+)
+
+
+def update_map(communities, addresses, bedrooms, sqft_categories, exposures, floor_categories):
+    filtered_df_3 = grouped_df_2[
+        grouped_df_2['Community'].isin(communities) &
+        grouped_df_2['Short Address'].isin(addresses) &
+        grouped_df_2['Bedrooms'].isin(bedrooms) &
+        grouped_df_2['SqFt_Category'].isin(sqft_categories) &
+        grouped_df_2['Exposure_Category'].isin(exposures) &
+        grouped_df_2['Floor_Category'].isin(floor_categories)
+    ]
+    
+    # Group by latitude and longitude to aggregate data for each unique location
+    grouped_locations = defaultdict(list)
+    for _, row in filtered_df_3.iterrows():
+        key = (row['Latitude'], row['Longitude'])
+        grouped_locations[key].append(row)
+
+    # Generate JavaScript to update map markers based on grouped_locations
+    js_code = '''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Addresses Map</title>
+            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
+            <script>
+                function initMap() {
+                    var map = new google.maps.Map(document.getElementById('map'), {
+                        zoom: 12,
+                        center: {lat: 43.65107, lng: -79.347015}
+                    });
+
+                    // Define locations and their aggregated data
+                    var locations = [
+    '''
+
+    # Construct each location with aggregated data in JavaScript format
+    for location, rows in grouped_locations.items():
+        js_code += f"{{lat: {location[0]}, lng: {location[1]}, shortAddress: '{rows[0]['Short Address']}', data: {json.dumps([{'units': row['units'], 'avgSoldPrice': row['avg_sold_price'], 'DOM': row['avg_DOM']} for row in rows])}}},\n"
+
+    js_code += '''
+                    ];
+
+                    // Loop through locations to create markers
+                    locations.forEach(function(loc) {
+                        var marker = new google.maps.Marker({
+                            position: {lat: loc.lat, lng: loc.lng},
+                            map: map,
+                            title: loc.shortAddress
+                        });
+
+                        // Create content for the tooltip
+                        var tooltipContent = '<div>';
+                        
+                        tooltipContent += `<strong>Address:</strong> ${loc.shortAddress}<br><br>`;
+
+                        loc.data.forEach(function(row) {
+                            tooltipContent += `
+                                <strong>Units:</strong> ${row.units}<br>
+                                <strong>Avg Sold Price:</strong> $${row.avgSoldPrice.toLocaleString()}<br>
+                                <strong>Avg DOM:</strong> ${row.DOM}<br><br>
+                            `;
+                        });
+
+
+                        tooltipContent += '</div>';
+
+                        // Create info window for each marker
+                        var infoWindow = new google.maps.InfoWindow({
+                            content: tooltipContent
+                        });
+
+                        // Event listener to show info window on marker hover
+                        marker.addListener('mouseover', function() {
+                            infoWindow.open(map, marker);
+                        });
+
+                        // Event listener to close info window on marker mouseout
+                        marker.addListener('mouseout', function() {
+                            infoWindow.close();
+                        });
+                    });
+                }
+            </script>
+        </head>
+        <body onload="initMap()">
+            <div id="map" style="height: 500px; width: 100%;"></div>
+        </body>
+        </html>
+    '''
+
+    return js_code
+    
+    
+
+# Make sure to replace YOUR_API_KEY with your actual Google Maps API key
 
 # Callback to update scatter plot based on slicer values for tab-1
 # Define callback to update scatter plot based on slicer values
@@ -390,6 +548,23 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
     )
     return fig, None #unit_count_text
 
+
+# Callback to update the options for short address based on selected community
+@app.callback(
+    Output('short-address-filter-2', 'options'),
+    Output('short-address-filter-2', 'value'),
+    Input('community-filter-2', 'value')
+)
+def set_short_address_options(selected_communities):
+    if not selected_communities:
+        filtered_df = grouped_df_2
+    else:
+        filtered_df = grouped_df_2[grouped_df_2['Community'].isin(selected_communities)]
+    
+    short_address_options = [{'label': short_address, 'value': short_address} for short_address in filtered_df['Short Address'].unique()]
+
+    
+    return short_address_options, [option['value'] for option in short_address_options]
 # Callback to update scatter plot based on slicer values for tab-2
 # Define callback to update scatter plot based on slicer values
 @app.callback(
@@ -412,7 +587,7 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
                              grouped_df_2['Floor_Category'].isin(selected_floor_category)]
  
     units_sold = filtered_df_2['units'].sum()
-    unit_count_text = f"Total Units Sold: {units_sold}" 
+    unit_count_text = f"Total Units Sold: {units_sold}"   
     
     fig = px.scatter(filtered_df_2, x='Short Address', y='avg_sold_price', color='Short Address',
                      size='units',# hover_name='Community',
@@ -449,5 +624,6 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
     )
     return fig, None #unit_count_text
 
+
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, port=8051)
