@@ -10,14 +10,10 @@ import json
 #from geopy.extra.rate_limiter import RateLimiter
 import os
 
-#google_api_key = os.getenv('GOOGLE_API_KEY')
- 
 
-#google_api_key = os.getenv('GOOGLE_API_KEY')
-
-#url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
-df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_trial_geo.csv', encoding='ISO-8859-1')
-#df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
+url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
+#df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_trial_geo.csv', encoding='ISO-8859-1')
+df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
 
 # Create a DataFrame
 df1 = pd.DataFrame(df)
