@@ -1,0 +1,12 @@
+/* assets/styles.css */
+.dropdown-container .Select-multi-value:not(:first-of-type) {
+    display: none;
+}
+
+.dropdown-container .Select-multi-value::after {
+    content: '...';
+    display: inline-block;
+    color: #000;
+    margin-left: 5px;
+    font-weight: bold;
+}
