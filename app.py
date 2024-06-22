@@ -183,9 +183,11 @@ def render_content(tab):
                 id='community-filter-1',
                 options=community_options_1,
                 value=['University'],
+                clearable=False,
                 multi=True,
                 style={'font-size': 'smaller', 'width': '100%'}
-            ),
+
+            ), 
             html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='bedroom-filter-1',
@@ -236,14 +238,22 @@ def render_content(tab):
                 multi=True,
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
-            html.Label('Select Address:', style={'font-size': 'smaller'}),
-            dcc.Dropdown(
-                id='short-address-filter-2',
-                options=short_address_options_2,
-                value=[option['value'] for option in short_address_options_2],
-                multi=True,
-                style={'font-size': 'smaller', 'width': '100%'}
-            ),
+            html.Label('Select Address:', style={'font-size': 'smaller'}),                
+            html.Div([
+                html.Div([
+            
+                    dcc.Dropdown(
+                        id='short-address-filter-2',
+                        options=short_address_options_2,
+                        value=[option['value'] for option in short_address_options_2],
+                        multi=True,
+                        clearable=False,
+                        className='dropdown-container',
+                        style={'font-size': 'smaller', 'width': '100%'}
+                    )
+                ], className='dropdown-container', style={'margin-bottom': '10px'})
+            ]),
+   
             html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
             dcc.Dropdown(
                 id='bedroom-filter-2',
