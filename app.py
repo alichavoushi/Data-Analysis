@@ -10,9 +10,13 @@ import json
 #from geopy.extra.rate_limiter import RateLimiter
 import os
 
+#google_api_key = os.getenv('GOOGLE_API_KEY')
+ 
 
-url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
-#df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_trial_geo.csv', encoding='ISO-8859-1')
+#google_api_key = os.getenv('GOOGLE_API_KEY')
+
+url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_geo.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
+#df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_geo.csv', encoding='ISO-8859-1')
 df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
 
 # Create a DataFrame
@@ -21,7 +25,7 @@ df1['Apt/Unit #'] = df1['Apt/Unit #'].str.replace('#', '')
 df1.fillna({'Street #': '', 'Street Name': ''}, inplace=True)
 df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(str)
 df1['Sold Price'] = pd.to_numeric(df1['Sold Price'], errors='coerce')
-df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(str)+" st, Toronto, ON, Canada"
+df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(str)#+" st, Toronto, ON, Canada"
 # Initialize geocoder
 
 def calculate_floor(row):
@@ -150,16 +154,18 @@ exposure_options_2 = [{'label': exposure, 'value': exposure} for exposure in gro
 floor_category_options_2 = [{'label': floor_category, 'value': floor_category} for floor_category in grouped_df_2['Floor_Category'].unique()]
 short_address_options_2 = [{'label': short_address, 'value': short_address} for short_address in grouped_df_2['Short Address'].unique()]
 
+
 app = Dash(__name__)
 server = app.server
 
 app.config.suppress_callback_exceptions = True
 # Define the layout of the web application
+
 app.layout = html.Div([
     dcc.Tabs(id='tabs', value='tab-1', children=[
-        dcc.Tab(label='2024 YTD Sold Analysis by Community and Unit Details', value='tab-1'),
-        dcc.Tab(label='2024 YTD Sold Analysis by Address and Unit details', value='tab-2'),
-        dcc.Tab(label='Map View', value='tab-3'),
+        dcc.Tab(label='2024 YTD Sold Analysis by Community and Unit Details', value='tab-1', style={'font-size': '12px'}),
+        dcc.Tab(label='2024 YTD Sold Analysis by Address and Unit Details', value='tab-2', style={'font-size': '12px'}),
+        dcc.Tab(label='Map View', value='tab-3', style={'font-size': '12px'}),
     ]),
     html.Div(id='tabs-content')
 ])
@@ -212,6 +218,7 @@ def render_content(tab):
                 multi=True,
                 style={'font-size': 'smaller', 'width': '100%'}
             ),
+            html.Div(id='floor-summary-1', style={'font-size': 'smaller'}),
             html.Div([
                 html.Div([
                     dcc.Graph(id='scatter-plot-1', style={'height': '80vh'}),
@@ -337,16 +344,15 @@ def render_content(tab):
                         <html>
                         <head>
                             <title>Addresses Map</title>
-                            <script src="https://maps.googleapis.com/maps/api/js?key=Your_Key&callback=initMap" async defer></script>
+                            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
+                            <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
                             <script>
                                 function initMap() {
                                     var map = new google.maps.Map(document.getElementById('map'), {
                                         zoom: 12,
                                         center: {lat: 43.65107, lng: -79.347015}
                                     });
-
                                     
-                                }
                             </script>
                         </head>
                         <body onload="initMap()">
@@ -411,12 +417,26 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
         <head>
             <title>Addresses Map</title>
             <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
+            <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
             <script>
+                var map;
+                var markers = [];
+                var markerCluster;
+                
                 function initMap() {
-                    var map = new google.maps.Map(document.getElementById('map'), {
+                    map = new google.maps.Map(document.getElementById('map'), {
                         zoom: 12,
                         center: {lat: 43.65107, lng: -79.347015}
                     });
+                    updateMap();
+                }
+                
+                function updateMap() {
+                    // Clear existing markers
+                    markers.forEach(function(marker) {
+                        marker.setMap(null);
+                    });
+                    markers = [];
 
                     // Define locations and their aggregated data
                     var locations = [
@@ -424,26 +444,37 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
 
     # Construct each location with aggregated data in JavaScript format
     for location, rows in grouped_locations.items():
-        js_code += f"{{lat: {location[0]}, lng: {location[1]}, shortAddress: '{rows[0]['Short Address']}', data: {json.dumps([{'units': row['units'], 'avgSoldPrice': row['avg_sold_price'], 'DOM': row['avg_DOM']} for row in rows])}}},\n"
+        js_code += f"{{lat: {location[0]}, lng: {location[1]}, shortAddress: '{rows[0]['Short Address']}', data: {json.dumps([{'Bedrooms': row['Bedrooms'], 'SqFt_Category': row['SqFt_Category'], 'Exposure_Category': row['Exposure_Category'], 'Floor_Category': row['Floor_Category'],'units': row['units'], 'avgSoldPrice': row['avg_sold_price'], 'DOM': row['avg_DOM']} for row in rows])}}},\n"
 
     js_code += '''
                     ];
-
+                    
+                    
                     // Loop through locations to create markers
                     locations.forEach(function(loc) {
                         var marker = new google.maps.Marker({
                             position: {lat: loc.lat, lng: loc.lng},
                             map: map,
-                            title: loc.shortAddress
+                            title: loc.shortAddress,
+                            icon: {
+                                url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                                scaledSize: new google.maps.Size(32, 32) // Adjust the size here
+                            }
                         });
-
+                        
+                        markers.push(marker);
+                    
                         // Create content for the tooltip
-                        var tooltipContent = '<div>';
+                        var tooltipContent = '<div style="font-size: 10px;">'; 
                         
                         tooltipContent += `<strong>Address:</strong> ${loc.shortAddress}<br><br>`;
 
                         loc.data.forEach(function(row) {
                             tooltipContent += `
+                                <strong>Bedrooms:</strong> ${row.Bedrooms}<br>
+                                <strong>SqFt:</strong> ${row.SqFt_Category}<br>
+                                <strong>Exposure:</strong> ${row.Exposure_Category}<br>
+                                <strong>Floor Level:</strong> ${row.Floor_Category}<br>
                                 <strong>Units:</strong> ${row.units}<br>
                                 <strong>Avg Sold Price:</strong> $${row.avgSoldPrice.toLocaleString()}<br>
                                 <strong>Avg DOM:</strong> ${row.DOM}<br><br>
@@ -459,15 +490,30 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
                         });
 
                         // Event listener to show info window on marker hover
-                        marker.addListener('mouseover', function() {
+                        marker.addListener('click', function() {
                             infoWindow.open(map, marker);
                         });
 
-                        // Event listener to close info window on marker mouseout
-                        marker.addListener('mouseout', function() {
-                            infoWindow.close();
-                        });
+                        
                     });
+                    
+                    // Add MarkerClusterer to manage markers
+                    var markerCluster = new MarkerClusterer(map, markers, {
+                        imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
+                    });
+
+                }
+                
+                // Function to keep the info window open while interacting with it
+                function keepInfoWindowOpen() {
+                    if (infoWindow) {
+                        google.maps.event.addListener(infoWindow, 'domready', function() {
+                            var iwOuter = document.querySelector('.gm-style-iw');
+                            if (iwOuter) {
+                                iwOuter.parentNode.style.pointerEvents = 'auto';
+                            }
+                        });
+                    }
                 }
             </script>
         </head>
@@ -495,6 +541,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
      Input('floor-category-filter-1', 'value')]
 )
 
+
 def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category):
     filtered_df_1 = grouped_df_1[grouped_df_1['Community'].isin(selected_communities) & 
                              grouped_df_1['Bedrooms'].isin(selected_bedrooms) & 
@@ -502,13 +549,14 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
                              grouped_df_1['Exposure_Category'].isin(selected_exposure) &
                              grouped_df_1['Floor_Category'].isin(selected_floor_category)]
     
+    
     units_sold = filtered_df_1['units'].sum()
     unit_count_text = f"Total Units Sold: {units_sold}"
         
     custom_order = ['<700', '700-899', '900-1199', '1200+','Unknown']
         
         # Sort the unique values of the 'SqFt_Category' column based on the custom order
-    sorted_x_values = sorted(grouped_df_1['SqFt_Category'].unique(), key=lambda x: custom_order.index(x))
+    sorted_x_values = sorted(filtered_df_1['SqFt_Category'].unique(), key=lambda x: custom_order.index(x))
     
     fig = px.scatter(filtered_df_1, x='SqFt_Category', y='avg_sold_price', color='Community',
                      size='units',# hover_name='Community',
@@ -528,7 +576,7 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
             xanchor='left',
             x=0,
             title='',
-            font=dict(size=10)
+            font=dict(size=8)
         ),
         annotations=[
             dict(
@@ -538,7 +586,7 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
                 yref='paper',
                 text=unit_count_text,
                 showarrow=False,
-                font=dict(size=10)
+                font=dict(size=6)
             )
         ]
     )
@@ -596,15 +644,7 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
     fig.update_layout(
         height=600,
         margin=dict(t=100),  # Add margin to the top
-        legend=dict(
-            orientation='h',
-            yanchor='bottom',
-            y=1,  # Adjust y position to move the legend above the title
-            xanchor='left',
-            x=0,
-            title='',
-            font=dict(size=10)
-        ),
+        showlegend=False,
         annotations=[
             dict(
                 x=1,
@@ -619,7 +659,6 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
         
     )
     return fig, None #unit_count_text
-
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8051)
