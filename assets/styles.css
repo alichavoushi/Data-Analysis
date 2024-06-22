@@ -1,10 +1,14 @@
-/* Hide all but the first selected item */
+/* assets/styles.css */
 .dropdown-container .Select-multi-value:not(:first-of-type) {
     display: none;
 }
 
-/* Show a custom indicator to indicate more items are selected */
-.dropdown-container .Select-multi-value::after {
+.dropdown-container .Select-multi-value:first-of-type + .Select-clear-zone,
+.dropdown-container .Select-multi-value:first-of-type + .Select-arrow-zone {
+    display: none;
+}
+
+.dropdown-container .Select-multi-value:first-of-type::after {
     content: '...';
     display: inline-block;
     color: #000;
