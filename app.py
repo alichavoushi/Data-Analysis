@@ -7,8 +7,6 @@ from dash.dependencies import Output, Input
 from dash import dcc, html, Input, Output
 from collections import defaultdict
 import json
-#from geopy.geocoders import GoogleV3
-#from geopy.extra.rate_limiter import RateLimiter
 import os
 
 #google_api_key = os.getenv('GOOGLE_API_KEY')
