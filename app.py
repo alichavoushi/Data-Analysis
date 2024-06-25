@@ -2,17 +2,21 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 from dash import Dash, dcc, html
-import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input
 from dash import dcc, html, Input, Output
 from collections import defaultdict
 import json
+#from geopy.geocoders import GoogleV3
+#from geopy.extra.rate_limiter import RateLimiter
 import os
+
+#google_api_key = os.getenv('GOOGLE_API_KEY')
+ 
 
 #google_api_key = os.getenv('GOOGLE_API_KEY')
 
 url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_geo2.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
-#df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_geo2.csv', encoding='ISO-8859-1')
+#df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_geo.csv', encoding='ISO-8859-1')
 df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
 
 # Create a DataFrame
@@ -62,13 +66,13 @@ def categorize_floor(floor):
         try:
             floor_num = int(floor)
             if floor_num <= 10:
-                return '1-10'#'Low'
+                return 'Low'
             elif 11 <= floor_num <= 25:
-                return '11-25'#'Mid'
+                return 'Mid'
             elif 26 <= floor_num <= 40:
-                return '26-40'#'High'
+                return 'High'
             else:
-                return '40+'#'Very High'
+                return 'Very High'
         except ValueError:
             return 'Invalid'
 
@@ -107,7 +111,7 @@ df1['Exposure_Category'] = df1['Exposure'].apply(map_exposure_to_category)
 
 condition = (df1['Status'] == 'Sold') & (df1['Municipality District'] == 'Toronto C01')& (df1['Sold Price'] < 2000000)
 
-filtered_selected_columns = df1[condition][['Community', 'Short Address','Beds', 'SqFt_Category', 'Sold Price','DOM','Exposure_Category','Floor_Category','Latitude','Longitude']]
+filtered_selected_columns = df1[condition][['Community', 'Short Address','Bedrooms', 'SqFt_Category', 'Sold Price','DOM','Exposure_Category','Floor_Category','Latitude','Longitude']]
 # Convert 'Sold Price' column to numeric
 filtered_selected_columns['Sold Price'] = pd.to_numeric(filtered_selected_columns['Sold Price'], errors='coerce')
 filtered_selected_columns['DOM'] = pd.to_numeric(filtered_selected_columns['DOM'], errors='coerce')
@@ -117,7 +121,7 @@ filtered_selected_columns['DOM'] = pd.to_numeric(filtered_selected_columns['DOM'
 filtered_selected_columns['Community'] = filtered_selected_columns['Community'].astype(str)
 #filtered_selected_columns['Exposure'] = filtered_selected_columns['Exposure'].astype(str)
 
-grouped_df_1 = filtered_selected_columns.groupby(['Community', 'SqFt_Category','Beds', 'Floor_Category','Exposure_Category']).agg(
+grouped_df_1 = filtered_selected_columns.groupby(['Community', 'SqFt_Category','Bedrooms', 'Floor_Category','Exposure_Category']).agg(
     avg_sold_price=('Sold Price', 'mean'),
     avg_DOM=('DOM', 'mean'),
     units=('Community', 'size')
@@ -126,7 +130,7 @@ grouped_df_1 = filtered_selected_columns.groupby(['Community', 'SqFt_Category','
 grouped_df_1['avg_sold_price'] = np.ceil(grouped_df_1['avg_sold_price'])
 grouped_df_1['avg_DOM'] = np.ceil(grouped_df_1['avg_DOM'])
 
-grouped_df_2 = filtered_selected_columns.groupby(['Community', 'Short Address','SqFt_Category','Beds','Floor_Category','Exposure_Category','Latitude','Longitude']).agg(
+grouped_df_2 = filtered_selected_columns.groupby(['Community', 'Short Address','SqFt_Category','Bedrooms','Floor_Category','Exposure_Category','Latitude','Longitude']).agg(
     avg_sold_price=('Sold Price', 'mean'),
     avg_DOM=('DOM', 'mean'),
     units=('Community', 'size')
@@ -137,24 +141,26 @@ grouped_df_2['avg_DOM'] = np.ceil(grouped_df_2['avg_DOM'])
 
 # Define slicers (dropdowns) for filtering data tab-1
 community_options_1 = [{'label': community, 'value': community} for community in grouped_df_1['Community'].unique()]
-bedroom_options_1 = [{'label': str(bedroom), 'value': bedroom} for bedroom in grouped_df_1['Beds'].unique()]
+bedroom_options_1 = [{'label': str(bedroom), 'value': bedroom} for bedroom in grouped_df_1['Bedrooms'].unique()]
 sqft_options_1 = [{'label': sqft, 'value': sqft} for sqft in grouped_df_1['SqFt_Category'].unique()]
 exposure_options_1 = [{'label': exposure, 'value': exposure} for exposure in grouped_df_1['Exposure_Category'].unique()]
 floor_category_options_1 = [{'label': floor_category, 'value': floor_category} for floor_category in grouped_df_1['Floor_Category'].unique()]
 
 # Define slicers (dropdowns) for filtering data tab-2
 community_options_2 = [{'label': community, 'value': community} for community in grouped_df_2['Community'].unique()]
-bedroom_options_2 = [{'label': str(bedroom), 'value': bedroom} for bedroom in grouped_df_2['Beds'].unique()]
+bedroom_options_2 = [{'label': str(bedroom), 'value': bedroom} for bedroom in grouped_df_2['Bedrooms'].unique()]
 sqft_options_2 = [{'label': sqft, 'value': sqft} for sqft in grouped_df_2['SqFt_Category'].unique()]
 exposure_options_2 = [{'label': exposure, 'value': exposure} for exposure in grouped_df_2['Exposure_Category'].unique()]
 floor_category_options_2 = [{'label': floor_category, 'value': floor_category} for floor_category in grouped_df_2['Floor_Category'].unique()]
 short_address_options_2 = [{'label': short_address, 'value': short_address} for short_address in grouped_df_2['Short Address'].unique()]
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+app = Dash(__name__)
 server = app.server
 
 app.config.suppress_callback_exceptions = True
 # Define the layout of the web application
+
 app.layout = html.Div([
     dcc.Tabs(id='tabs', value='tab-1', children=[
         dcc.Tab(label='2024 YTD Sold Analysis by Community and Unit Details', value='tab-1', style={'font-size': '12px'}),
@@ -171,56 +177,49 @@ app.layout = html.Div([
 
 def render_content(tab):
     if tab == 'tab-1':
-        return dbc.Container([
-            html.Div([
-                dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
-                dbc.Collapse(
-                    dbc.Card(dbc.CardBody([
-                        html.Label('Select Community:', style={'font-size': 'smaller'}),
-                        dcc.Dropdown(
-                            id='community-filter-1',
-                            options=community_options_1,
-                            value=['University'],
-                            multi=True,
-                            style={'font-size': 'smaller', 'width': '100%'}
-                        ),
-                        html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
-                        dcc.Dropdown(
-                            id='bedroom-filter-1',
-                            options=bedroom_options_1,
-                            value=[option['value'] for option in bedroom_options_1],
-                            multi=True,
-                            style={'font-size': 'smaller', 'width': '100%'}
-                        ),
-                        html.Label('Select SqFt:', style={'font-size': 'smaller'}),
-                        dcc.Dropdown(
-                            id='sqft-filter-1',
-                            options=sqft_options_1,
-                            value=[option['value'] for option in sqft_options_1],
-                            multi=True,
-                            style={'font-size': 'smaller', 'width': '100%'}
-                        ),
-                        html.Label('Select Exposure:', style={'font-size': 'smaller'}),
-                        dcc.Dropdown(
-                            id='exposure-filter-1',
-                            options=exposure_options_1,
-                            value=[option['value'] for option in exposure_options_1],
-                            multi=True,
-                            style={'font-size': 'smaller', 'width': '100%'}
-                        ),
-                        html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
-                        dcc.Dropdown(
-                            id='floor-category-filter-1',
-                            options=floor_category_options_1,
-                            value=[option['value'] for option in floor_category_options_1],
-                            multi=True,
-                            style={'font-size': 'smaller', 'width': '100%'}
-                        ),
-                    ])),
-                    id="collapse",
-                    is_open=False,
-                ),
-            ]),
+        return html.Div([
+            html.Label('Select Community:', style={'font-size': 'smaller'}),
+            dcc.Dropdown(
+                id='community-filter-1',
+                options=community_options_1,
+                value=['University'],
+                clearable=False,
+                multi=True,
+                style={'font-size': 'smaller', 'width': '100%'}
+
+            ), 
+            html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
+            dcc.Dropdown(
+                id='bedroom-filter-1',
+                options=bedroom_options_1,
+                value=[option['value'] for option in bedroom_options_1],
+                multi=True,
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select SqFt:', style={'font-size': 'smaller'}),
+            dcc.Dropdown(
+                id='sqft-filter-1',
+                options=sqft_options_1,
+                value=[option['value'] for option in sqft_options_1],
+                multi=True,
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select Exposure:', style={'font-size': 'smaller'}),
+            dcc.Dropdown(
+                id='exposure-filter-1',
+                options=exposure_options_1,
+                value=[option['value'] for option in exposure_options_1],
+                multi=True,
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
+            dcc.Dropdown(
+                id='floor-category-filter-1',
+                options=floor_category_options_1,
+                value=[option['value'] for option in floor_category_options_1],
+                multi=True,
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
             html.Div(id='floor-summary-1', style={'font-size': 'smaller'}),
             html.Div([
                 html.Div([
@@ -228,138 +227,120 @@ def render_content(tab):
                     html.Div(id='unit-count-1', style={'font-size': 'larger', 'font-weight': 'bold', 'margin-top': '20px'}),
                 ], style={'width': '100%', 'display': 'inline-block'}),
             ])
-        ], fluid=True)
-
-
+        ])
     elif tab == 'tab-2':
-       return dbc.Container([
-            html.Div([
-                dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
-                dbc.Collapse(
-                    dbc.Card(dbc.CardBody([
-                        html.Label('Select Community:', style={'font-size': 'smaller'}),
-                        dcc.Dropdown(
-                            id='community-filter-2',
-                            options=community_options_2,
-                            value=['University'],
-                            multi=True,
-                            style={'font-size': 'smaller', 'width': '100%'}
-                        ),
-                        html.Label('Select Address:', style={'font-size': 'smaller'}),
-                        dcc.Dropdown(
-                            id='short-address-filter-2',
-                            options=short_address_options_2,
-                            value=[option['value'] for option in short_address_options_2],
-                            multi=True,
-                            style={'font-size': 'smaller', 'width': '100%'}
-                        ),
-                        html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
-                        dcc.Dropdown(
-                            id='bedroom-filter-2',
-                            options=bedroom_options_2,
-                            value=[option['value'] for option in bedroom_options_2],
-                            multi=True,
-                            style={'font-size': 'smaller', 'width': '100%'}
-                        ),
-                        html.Label('Select SqFt:', style={'font-size': 'smaller'}),
-                        dcc.Dropdown(
-                            id='sqft-filter-2',
-                            options=sqft_options_2,
-                            value=[option['value'] for option in sqft_options_2],
-                            multi=True,
-                            style={'font-size': 'smaller', 'width': '100%'}
-                        ),
-                        html.Label('Select Exposure:', style={'font-size': 'smaller'}),
-                        dcc.Dropdown(
-                            id='exposure-filter-2',
-                            options=exposure_options_2,
-                            value=[option['value'] for option in exposure_options_2],
-                            multi=True,
-                            style={'font-size': 'smaller', 'width': '100%'}
-                        ),
-                        html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
-                        dcc.Dropdown(
-                            id='floor-category-filter-2',
-                            options=floor_category_options_2,
-                            value=[option['value'] for option in floor_category_options_2],
-                            multi=True,
-                            style={'font-size': 'smaller', 'width': '100%'}
-                        ),
-                    ])),
-                    id="collapse",
-                    is_open=False,
-                ),
-            ]),
+        return html.Div([
+            html.Label('Select Community:', style={'font-size': 'smaller'}),
+            dcc.Dropdown(
+                id='community-filter-2',
+                options=community_options_2,
+                value=['University'],
+                multi=True,
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select Address:', style={'font-size': 'smaller'}),                
+            dcc.Dropdown(
+                id='short-address-filter-2',
+                options=short_address_options_2,
+                value=[option['value'] for option in short_address_options_2],
+                multi=True,
+                clearable=False,
+                className='dropdown-container',
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+
+            html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
+            dcc.Dropdown(
+                id='bedroom-filter-2',
+                options=bedroom_options_2,
+                value=[option['value'] for option in bedroom_options_2],
+                multi=True,
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select SqFt:', style={'font-size': 'smaller'}),
+            dcc.Dropdown(
+                id='sqft-filter-2',
+                options=sqft_options_2,
+                value=[option['value'] for option in sqft_options_2],
+                multi=True,
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select Exposure:', style={'font-size': 'smaller'}),
+            dcc.Dropdown(
+                id='exposure-filter-2',
+                options=exposure_options_2,
+                value=[option['value'] for option in exposure_options_2],
+                multi=True,
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
+            html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
+            dcc.Dropdown(
+                id='floor-category-filter-2',
+                options=floor_category_options_2,
+                value=[option['value'] for option in floor_category_options_2],
+                multi=True,
+                style={'font-size': 'smaller', 'width': '100%'}
+            ),
             html.Div([
                 html.Div([
                     dcc.Graph(id='scatter-plot-2', style={'height': '80vh'}),
                     html.Div(id='unit-count-2', style={'font-size': 'larger', 'font-weight': 'bold', 'margin-top': '20px'}),
                 ], style={'width': '100%', 'display': 'inline-block'}),
             ])
-        ], fluid=True)
+        ])
     elif tab == 'tab-3':
-        return dbc.Container([
+        return html.Div([
+            html.H3('Google Map'),
             html.Div([
-                dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
-                dbc.Collapse(
-                    dbc.Card(dbc.CardBody([
-                        html.H3('Google Map'),
-                        html.Div([
-                            html.Label('Select Community:', style={'font-size': 'smaller'}),
-                            dcc.Dropdown(
-                                id='community-filter-3',
-                                options=community_options_2,
-                                value=['University'],
-                                multi=True,
-                                style={'font-size': 'smaller', 'width': '100%'}
-                            ),
-                            html.Label('Select Address:', style={'font-size': 'smaller'}),
-                            dcc.Dropdown(
-                                id='short-address-filter-3',
-                                options=short_address_options_2,
-                                value=[option['value'] for option in short_address_options_2],
-                                multi=True,
-                                style={'font-size': 'smaller', 'width': '100%'}
-                            ),
-                            html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
-                            dcc.Dropdown(
-                                id='bedroom-filter-3',
-                                options=bedroom_options_2,
-                                value=[option['value'] for option in bedroom_options_2],
-                                multi=True,
-                                style={'font-size': 'smaller', 'width': '100%'}
-                            ),
-                            html.Label('Select SqFt:', style={'font-size': 'smaller'}),
-                            dcc.Dropdown(
-                                id='sqft-filter-3',
-                                options=sqft_options_2,
-                                value=[option['value'] for option in sqft_options_2],
-                                multi=True,
-                                style={'font-size': 'smaller', 'width': '100%'}
-                            ),
-                            html.Label('Select Exposure:', style={'font-size': 'smaller'}),
-                            dcc.Dropdown(
-                                id='exposure-filter-3',
-                                options=exposure_options_2,
-                                value=[option['value'] for option in exposure_options_2],
-                                multi=True,
-                                style={'font-size': 'smaller', 'width': '100%'}
-                            ),
-                            html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
-                            dcc.Dropdown(
-                                id='floor-category-filter-3',
-                                options=floor_category_options_2,
-                                value=[option['value'] for option in floor_category_options_2],
-                                multi=True,
-                                style={'font-size': 'smaller', 'width': '100%'}
-                            ),
-                        ])
-                    ])),
-                    id="collapse",
-                    is_open=False,
+                html.Label('Select Community:', style={'font-size': 'smaller'}),
+                dcc.Dropdown(
+                    id='community-filter-3',
+                    options=community_options_2,
+                    value=['University'],
+                    multi=True,
+                    style={'font-size': 'smaller', 'width': '100%'}
+                ),
+                html.Label('Select Address:', style={'font-size': 'smaller'}),
+                dcc.Dropdown(
+                    id='short-address-filter-3',
+                    options=short_address_options_2,
+                    value=[option['value'] for option in short_address_options_2],
+                    multi=True,
+                    style={'font-size': 'smaller', 'width': '100%'}
+                ),
+                html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
+                dcc.Dropdown(
+                    id='bedroom-filter-3',
+                    options=bedroom_options_2,
+                    value=[option['value'] for option in bedroom_options_2],
+                    multi=True,
+                    style={'font-size': 'smaller', 'width': '100%'}
+                ),
+                html.Label('Select SqFt:', style={'font-size': 'smaller'}),
+                dcc.Dropdown(
+                    id='sqft-filter-3',
+                    options=sqft_options_2,
+                    value=[option['value'] for option in sqft_options_2],
+                    multi=True,
+                    style={'font-size': 'smaller', 'width': '100%'}
+                ),
+                html.Label('Select Exposure:', style={'font-size': 'smaller'}),
+                dcc.Dropdown(
+                    id='exposure-filter-3',
+                    options=exposure_options_2,
+                    value=[option['value'] for option in exposure_options_2],
+                    multi=True,
+                    style={'font-size': 'smaller', 'width': '100%'}
+                ),
+                html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
+                dcc.Dropdown(
+                    id='floor-category-filter-3',
+                    options=floor_category_options_2,
+                    value=[option['value'] for option in floor_category_options_2],
+                    multi=True,
+                    style={'font-size': 'smaller', 'width': '100%'}
                 ),
             ]),
-
             html.Div(id='map', children=[
                 html.Iframe(
                     id='map-frame',
@@ -369,15 +350,14 @@ def render_content(tab):
                         <head>
                             <title>Addresses Map</title>
                             <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
+                            <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
                             <script>
                                 function initMap() {
                                     var map = new google.maps.Map(document.getElementById('map'), {
                                         zoom: 12,
                                         center: {lat: 43.65107, lng: -79.347015}
                                     });
-
-
-                                }
+                                    
                             </script>
                         </head>
                         <body onload="initMap()">
@@ -389,7 +369,7 @@ def render_content(tab):
                     height='500'
                 )
             ])
-        ], fluid=True)
+        ])
 
 
 @app.callback(
@@ -423,7 +403,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
     filtered_df_3 = grouped_df_2[
         grouped_df_2['Community'].isin(communities) &
         grouped_df_2['Short Address'].isin(addresses) &
-        grouped_df_2['Beds'].isin(bedrooms) &
+        grouped_df_2['Bedrooms'].isin(bedrooms) &
         grouped_df_2['SqFt_Category'].isin(sqft_categories) &
         grouped_df_2['Exposure_Category'].isin(exposures) &
         grouped_df_2['Floor_Category'].isin(floor_categories)
@@ -469,7 +449,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
 
     # Construct each location with aggregated data in JavaScript format
     for location, rows in grouped_locations.items():
-        js_code += f"{{lat: {location[0]}, lng: {location[1]}, shortAddress: '{rows[0]['Short Address']}', data: {json.dumps([{'Beds': row['Beds'], 'SqFt_Category': row['SqFt_Category'], 'Exposure_Category': row['Exposure_Category'], 'Floor_Category': row['Floor_Category'],'units': row['units'], 'avgSoldPrice': row['avg_sold_price'], 'DOM': row['avg_DOM']} for row in rows])}}},\n"
+        js_code += f"{{lat: {location[0]}, lng: {location[1]}, shortAddress: '{rows[0]['Short Address']}', data: {json.dumps([{'Bedrooms': row['Bedrooms'], 'SqFt_Category': row['SqFt_Category'], 'Exposure_Category': row['Exposure_Category'], 'Floor_Category': row['Floor_Category'],'units': row['units'], 'avgSoldPrice': row['avg_sold_price'], 'DOM': row['avg_DOM']} for row in rows])}}},\n"
 
     js_code += '''
                     ];
@@ -496,7 +476,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
 
                         loc.data.forEach(function(row) {
                             tooltipContent += `
-                                <strong>Beds:</strong> ${row.Beds}<br>
+                                <strong>Bedrooms:</strong> ${row.Bedrooms}<br>
                                 <strong>SqFt:</strong> ${row.SqFt_Category}<br>
                                 <strong>Exposure:</strong> ${row.Exposure_Category}<br>
                                 <strong>Floor Level:</strong> ${row.Floor_Category}<br>
@@ -549,16 +529,11 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
     '''
 
     return js_code
-# Callback to toggle the collapse
-@app.callback(
-    Output("collapse", "is_open"),
-    [Input("collapse-button", "n_clicks")],
-    [dash.dependencies.State("collapse", "is_open")],
-)
-def toggle_collapse(n, is_open):
-    if n:
-        return not is_open
-    return is_open
+    
+    
+
+# Make sure to replace YOUR_API_KEY with your actual Google Maps API key
+
 # Callback to update scatter plot based on slicer values for tab-1
 # Define callback to update scatter plot based on slicer values
 @app.callback(
@@ -574,7 +549,7 @@ def toggle_collapse(n, is_open):
 
 def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category):
     filtered_df_1 = grouped_df_1[grouped_df_1['Community'].isin(selected_communities) & 
-                             grouped_df_1['Beds'].isin(selected_bedrooms) & 
+                             grouped_df_1['Bedrooms'].isin(selected_bedrooms) & 
                              grouped_df_1['SqFt_Category'].isin(selected_sqft) &
                              grouped_df_1['Exposure_Category'].isin(selected_exposure) &
                              grouped_df_1['Floor_Category'].isin(selected_floor_category)]
@@ -590,7 +565,7 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
     
     fig = px.scatter(filtered_df_1, x='SqFt_Category', y='avg_sold_price', color='Community',
                      size='units',# hover_name='Community',
-                     hover_data=['Beds','Floor_Category','Exposure_Category','units','avg_DOM'],
+                     hover_data=['Bedrooms','Floor_Category','Exposure_Category','units','avg_DOM'],
                      labels={'SqFt_Category': 'Square Feet', 'Sold Price': 'Average Sold Price'},
                      title='Average Sold Price by Square Feet and Community')
 
@@ -616,12 +591,11 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
                 yref='paper',
                 text=unit_count_text,
                 showarrow=False,
-                font=dict(size=8)
+                font=dict(size=6)
             )
         ]
     )
     return fig, None #unit_count_text
-
 
 # Callback to update the options for short address based on selected community
 @app.callback(
@@ -655,7 +629,7 @@ def set_short_address_options(selected_communities):
 def update_scatter_plot_2(selected_communities, selected_short_address,selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category):
     filtered_df_2 = grouped_df_2[grouped_df_2['Community'].isin(selected_communities) & 
                              grouped_df_2['Short Address'].isin(selected_short_address) & 
-                             grouped_df_2['Beds'].isin(selected_bedrooms) & 
+                             grouped_df_2['Bedrooms'].isin(selected_bedrooms) & 
                              grouped_df_2['SqFt_Category'].isin(selected_sqft) &
                              grouped_df_2['Exposure_Category'].isin(selected_exposure) &
                              grouped_df_2['Floor_Category'].isin(selected_floor_category)]
@@ -665,7 +639,7 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
     
     fig = px.scatter(filtered_df_2, x='Short Address', y='avg_sold_price', color='Short Address',
                      size='units',# hover_name='Community',
-                     hover_data=['SqFt_Category','Beds','Floor_Category','Exposure_Category','units','avg_DOM'],
+                     hover_data=['SqFt_Category','Bedrooms','Floor_Category','Exposure_Category','units','avg_DOM'],
                      labels={'Short Address': 'Address', 'Sold Price': 'Average Sold Price'},
                      title='Average Sold Price by Address')
 
@@ -674,15 +648,7 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
     fig.update_layout(
         height=600,
         margin=dict(t=100),  # Add margin to the top
-        legend=dict(
-            orientation='h',
-            yanchor='bottom',
-            y=1,  # Adjust y position to move the legend above the title
-            xanchor='left',
-            x=0,
-            title='',
-            font=dict(size=10)
-        ),
+        showlegend=False,
         annotations=[
             dict(
                 x=1,
@@ -697,7 +663,6 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
         
     )
     return fig, None #unit_count_text
-
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8051)
