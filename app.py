@@ -150,7 +150,7 @@ exposure_options_2 = [{'label': exposure, 'value': exposure} for exposure in gro
 floor_category_options_2 = [{'label': floor_category, 'value': floor_category} for floor_category in grouped_df_2['Floor_Category'].unique()]
 short_address_options_2 = [{'label': short_address, 'value': short_address} for short_address in grouped_df_2['Short Address'].unique()]
 
-app = Dash(__name__)  #, external_stylesheets=[dbc.themes.BOOTSTRAP]
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
 app.config.suppress_callback_exceptions = True
