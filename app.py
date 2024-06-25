@@ -3,6 +3,7 @@ import numpy as np
 import plotly.express as px
 from dash import Dash, dcc, html
 from dash.dependencies import Output, Input
+import dash_bootstrap_components as dbc
 from dash import dcc, html, Input, Output
 from collections import defaultdict
 import json
@@ -154,8 +155,8 @@ exposure_options_2 = [{'label': exposure, 'value': exposure} for exposure in gro
 floor_category_options_2 = [{'label': floor_category, 'value': floor_category} for floor_category in grouped_df_2['Floor_Category'].unique()]
 short_address_options_2 = [{'label': short_address, 'value': short_address} for short_address in grouped_df_2['Short Address'].unique()]
 
-
-app = Dash(__name__)
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+#app = Dash(__name__)
 server = app.server
 
 app.config.suppress_callback_exceptions = True
