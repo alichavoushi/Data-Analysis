@@ -453,4 +453,4 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8051)
+    app.run_server(debug=True, port=int(os.environ.get("PORT", 8050)))
