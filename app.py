@@ -1,6 +1,8 @@
+# app.py
 import dash
 import dash_bootstrap_components as dbc
-from dash import dcc, html
+from dash import dcc
+from dash import html
 from dash.dependencies import Input, Output
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -11,14 +13,14 @@ app.layout = dbc.Container(
         dbc.Row(
             dbc.Col(
                 dcc.Input(id='input-1', placeholder='Enter text...', type='text', value=''),
-                width={'size': 4, 'offset': 4}  # Corrected syntax for width
+                width={'size': 4, 'offset': 4}
             ),
             justify='center'
         ),
         dbc.Row(
             dbc.Col(
                 html.Div(id='output-1', children=''),
-                width={'size': 4, 'offset': 4}  # Corrected syntax for width
+                width={'size': 4, 'offset': 4}
             ),
             justify='center'
         ),
