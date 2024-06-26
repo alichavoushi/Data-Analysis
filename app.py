@@ -1,4 +1,5 @@
 import pandas as pd
+import logging
 import numpy as np
 import plotly.express as px
 from dash import Dash, dcc, html
@@ -11,6 +12,7 @@ import json
 #from geopy.extra.rate_limiter import RateLimiter
 import os
 
+logging.basicConfig(level=logging.INFO)
 #google_api_key = os.getenv('GOOGLE_API_KEY')
 
 url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_geo2.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
@@ -453,4 +455,5 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
 
 
 if __name__ == '__main__':
+    logging.info("Starting the app...")
     app.run_server(debug=True, port=int(os.environ.get("PORT", 8050)))
