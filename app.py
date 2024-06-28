@@ -3,7 +3,7 @@ import numpy as np
 import plotly.express as px
 from dash import Dash, dcc, html
 import dash_bootstrap_components as dbc
-from dash.dependencies import Output, Input
+from dash.dependencies import Output, Input, State
 from dash import dcc, html, Input, Output
 from collections import defaultdict
 import json
@@ -306,7 +306,7 @@ def render_content(tab):
 @app.callback(
     Output("collapse", "is_open"),
     [Input("collapse-button", "n_clicks")],
-    [dash.dependencies.State("collapse", "is_open")],
+    [State("collapse", "is_open")],
 )
 def toggle_collapse(n, is_open):
     if n:
