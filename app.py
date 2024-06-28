@@ -299,9 +299,258 @@ def render_content(tab):
                 ], style={'width': '100%', 'display': 'inline-block'}),
             ])
         ], fluid=True)
+    elif tab == 'tab-3':
+        return dbc.Container([
+            html.Div([
+                dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
+                dbc.Collapse(
+                    dbc.Card(dbc.CardBody([
+                        html.H3('Google Map'),
+                        html.Div([
+                            html.Label('Select Community:', style={'font-size': 'smaller'}),
+                            dcc.Dropdown(
+                                id='community-filter-3',
+                                options=community_options_2,
+                                value=['University'],
+                                multi=True,
+                                style={'font-size': 'smaller', 'width': '100%'}
+                            ),
+                            html.Label('Select Address:', style={'font-size': 'smaller'}),
+                            dcc.Dropdown(
+                                id='short-address-filter-3',
+                                options=short_address_options_2,
+                                value=[option['value'] for option in short_address_options_2],
+                                multi=True,
+                                style={'font-size': 'smaller', 'width': '100%'}
+                            ),
+                            html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
+                            dcc.Dropdown(
+                                id='bedroom-filter-3',
+                                options=bedroom_options_2,
+                                value=[option['value'] for option in bedroom_options_2],
+                                multi=True,
+                                style={'font-size': 'smaller', 'width': '100%'}
+                            ),
+                            html.Label('Select SqFt:', style={'font-size': 'smaller'}),
+                            dcc.Dropdown(
+                                id='sqft-filter-3',
+                                options=sqft_options_2,
+                                value=[option['value'] for option in sqft_options_2],
+                                multi=True,
+                                style={'font-size': 'smaller', 'width': '100%'}
+                            ),
+                            html.Label('Select Exposure:', style={'font-size': 'smaller'}),
+                            dcc.Dropdown(
+                                id='exposure-filter-3',
+                                options=exposure_options_2,
+                                value=[option['value'] for option in exposure_options_2],
+                                multi=True,
+                                style={'font-size': 'smaller', 'width': '100%'}
+                            ),
+                            html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
+                            dcc.Dropdown(
+                                id='floor-category-filter-3',
+                                options=floor_category_options_2,
+                                value=[option['value'] for option in floor_category_options_2],
+                                multi=True,
+                                style={'font-size': 'smaller', 'width': '100%'}
+                            ),
+                        ])
+                    ])),
+                    id="collapse",
+                    is_open=False,
+                ),
+            ]),
+
+            html.Div(id='map', children=[
+                html.Iframe(
+                    id='map-frame',
+                    srcDoc='''
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Addresses Map</title>
+                            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
+                            <script>
+                                function initMap() {
+                                    var map = new google.maps.Map(document.getElementById('map'), {
+                                        zoom: 12,
+                                        center: {lat: 43.65107, lng: -79.347015}
+                                    });
 
 
+                                }
+                            </script>
+                        </head>
+                        <body onload="initMap()">
+                            <div id="map" style="height: 500px; width: 100%;"></div>
+                        </body>
+                        </html>
+                    ''',
+                    width='100%',
+                    height='500'
+                )
+            ])
+        ], fluid=True)
 
+
+@app.callback(
+    [Output('short-address-filter-3', 'options'),
+    Output('short-address-filter-3', 'value')],
+    Input('community-filter-3', 'value')
+)
+
+def set_short_address_options_3(selected_communities):
+    if not selected_communities:
+        filtered_df = grouped_df_2
+    else:
+        filtered_df = grouped_df_2[grouped_df_2['Community'].isin(selected_communities)]
+    
+    short_address_options = [{'label': short_address, 'value': short_address} for short_address in filtered_df['Short Address'].unique()]
+   
+    return short_address_options, [option['value'] for option in short_address_options]
+
+@app.callback(
+    Output('map-frame', 'srcDoc'),
+    [Input('community-filter-3', 'value'),
+    Input('short-address-filter-3', 'value'),
+    Input('bedroom-filter-3', 'value'),
+    Input('sqft-filter-3', 'value'),
+    Input('exposure-filter-3', 'value'),
+    Input('floor-category-filter-3', 'value')]
+)
+
+
+def update_map(communities, addresses, bedrooms, sqft_categories, exposures, floor_categories):
+    filtered_df_3 = grouped_df_2[
+        grouped_df_2['Community'].isin(communities) &
+        grouped_df_2['Short Address'].isin(addresses) &
+        grouped_df_2['Beds'].isin(bedrooms) &
+        grouped_df_2['SqFt_Category'].isin(sqft_categories) &
+        grouped_df_2['Exposure_Category'].isin(exposures) &
+        grouped_df_2['Floor_Category'].isin(floor_categories)
+    ]
+    
+    # Group by latitude and longitude to aggregate data for each unique location
+    grouped_locations = defaultdict(list)
+    for _, row in filtered_df_3.iterrows():
+        key = (row['Latitude'], row['Longitude'])
+        grouped_locations[key].append(row)
+
+    # Generate JavaScript to update map markers based on grouped_locations
+    js_code = '''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Addresses Map</title>
+            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
+            <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
+            <script>
+                var map;
+                var markers = [];
+                var markerCluster;
+                
+                function initMap() {
+                    map = new google.maps.Map(document.getElementById('map'), {
+                        zoom: 12,
+                        center: {lat: 43.65107, lng: -79.347015}
+                    });
+                    updateMap();
+                }
+                
+                function updateMap() {
+                    // Clear existing markers
+                    markers.forEach(function(marker) {
+                        marker.setMap(null);
+                    });
+                    markers = [];
+
+                    // Define locations and their aggregated data
+                    var locations = [
+    '''
+
+    # Construct each location with aggregated data in JavaScript format
+    for location, rows in grouped_locations.items():
+        js_code += f"{{lat: {location[0]}, lng: {location[1]}, shortAddress: '{rows[0]['Short Address']}', data: {json.dumps([{'Beds': row['Beds'], 'SqFt_Category': row['SqFt_Category'], 'Exposure_Category': row['Exposure_Category'], 'Floor_Category': row['Floor_Category'],'units': row['units'], 'avgSoldPrice': row['avg_sold_price'], 'DOM': row['avg_DOM']} for row in rows])}}},\n"
+
+    js_code += '''
+                    ];
+                    
+                    
+                    // Loop through locations to create markers
+                    locations.forEach(function(loc) {
+                        var marker = new google.maps.Marker({
+                            position: {lat: loc.lat, lng: loc.lng},
+                            map: map,
+                            title: loc.shortAddress,
+                            icon: {
+                                url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                                scaledSize: new google.maps.Size(32, 32) // Adjust the size here
+                            }
+                        });
+                        
+                        markers.push(marker);
+                    
+                        // Create content for the tooltip
+                        var tooltipContent = '<div style="font-size: 10px;">'; 
+                        
+                        tooltipContent += `<strong>Address:</strong> ${loc.shortAddress}<br><br>`;
+
+                        loc.data.forEach(function(row) {
+                            tooltipContent += `
+                                <strong>Beds:</strong> ${row.Beds}<br>
+                                <strong>SqFt:</strong> ${row.SqFt_Category}<br>
+                                <strong>Exposure:</strong> ${row.Exposure_Category}<br>
+                                <strong>Floor Level:</strong> ${row.Floor_Category}<br>
+                                <strong>Units:</strong> ${row.units}<br>
+                                <strong>Avg Sold Price:</strong> $${row.avgSoldPrice.toLocaleString()}<br>
+                                <strong>Avg DOM:</strong> ${row.DOM}<br><br>
+                            `;
+                        });
+
+
+                        tooltipContent += '</div>';
+
+                        // Create info window for each marker
+                        var infoWindow = new google.maps.InfoWindow({
+                            content: tooltipContent
+                        });
+
+                        // Event listener to show info window on marker hover
+                        marker.addListener('click', function() {
+                            infoWindow.open(map, marker);
+                        });
+
+                        
+                    });
+                    
+                    // Add MarkerClusterer to manage markers
+                    var markerCluster = new MarkerClusterer(map, markers, {
+                        imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
+                    });
+
+                }
+                
+                // Function to keep the info window open while interacting with it
+                function keepInfoWindowOpen() {
+                    if (infoWindow) {
+                        google.maps.event.addListener(infoWindow, 'domready', function() {
+                            var iwOuter = document.querySelector('.gm-style-iw');
+                            if (iwOuter) {
+                                iwOuter.parentNode.style.pointerEvents = 'auto';
+                            }
+                        });
+                    }
+                }
+            </script>
+        </head>
+        <body onload="initMap()">
+            <div id="map" style="height: 500px; width: 100%;"></div>
+        </body>
+        </html>
+    '''
+
+    return js_code
 # Callback to toggle the collapse
 @app.callback(
     Output("collapse", "is_open"),
