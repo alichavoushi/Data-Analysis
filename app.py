@@ -13,7 +13,6 @@ import os
 
 google_api_key = os.getenv('GOOGLE_API_KEY')
 
-
 url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_geo2.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
 #df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_geo2.csv', encoding='ISO-8859-1')
 df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
@@ -518,7 +517,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
         grouped_locations[key].append(row)
 
     # Generate JavaScript to update map markers based on grouped_locations
-    js_code = '''
+    js_code = f'''
         <!DOCTYPE html>
         <html>
         <head>
@@ -530,19 +529,19 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
                 var markers = [];
                 var markerCluster;
                 
-                function initMap() {
-                    map = new google.maps.Map(document.getElementById('map'), {
+                function initMap() {{
+                    map = new google.maps.Map(document.getElementById('map'), {{
                         zoom: 12,
-                        center: {lat: 43.65107, lng: -79.347015}
-                    });
+                        center: {{lat: 43.65107, lng: -79.347015}}
+                    }});
                     updateMap();
-                }
+                }}
                 
-                function updateMap() {
+                function updateMap() {{
                     // Clear existing markers
-                    markers.forEach(function(marker) {
+                    markers.forEach(function(marker) {{
                         marker.setMap(null);
-                    });
+                    }});
                     markers = [];
 
                     // Define locations and their aggregated data
@@ -558,16 +557,16 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
                     
                     
                     // Loop through locations to create markers
-                    locations.forEach(function(loc) {
-                        var marker = new google.maps.Marker({
-                            position: {lat: loc.lat, lng: loc.lng},
+                    locations.forEach(function(loc) {{
+                        var marker = new google.maps.Marker({{
+                            position: {{lat: loc.lat, lng: loc.lng}},
                             map: map,
                             title: loc.shortAddress,
-                            icon: {
+                            icon: {{
                                 url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
                                 scaledSize: new google.maps.Size(32, 32) // Adjust the size here
-                            }
-                        });
+                            }}
+                        }});
                         
                         markers.push(marker);
                     
@@ -576,7 +575,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
                         
                         tooltipContent += `<strong>Address:</strong> ${loc.shortAddress}<br><br>`;
 
-                        loc.data.forEach(function(row) {
+                        loc.data.forEach(function(row) {{
                             tooltipContent += `
                                 <strong>Beds:</strong> ${row.Beds}<br>
                                 <strong>SqFt:</strong> ${row.SqFt_Category}<br>
@@ -586,42 +585,42 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
                                 <strong>Avg Sold Price:</strong> $${row.avgSoldPrice.toLocaleString()}<br>
                                 <strong>Avg DOM:</strong> ${row.DOM}<br><br>
                             `;
-                        });
+                        }});
 
 
                         tooltipContent += '</div>';
 
                         // Create info window for each marker
-                        var infoWindow = new google.maps.InfoWindow({
+                        var infoWindow = new google.maps.InfoWindow({{
                             content: tooltipContent
-                        });
+                        }});
 
                         // Event listener to show info window on marker hover
-                        marker.addListener('click', function() {
+                        marker.addListener('click', function() {{
                             infoWindow.open(map, marker);
-                        });
+                        }});
 
                         
-                    });
+                    }});
                     
                     // Add MarkerClusterer to manage markers
-                    var markerCluster = new MarkerClusterer(map, markers, {
+                    var markerCluster = new MarkerClusterer(map, markers, {{
                         imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
-                    });
+                    }});
 
-                }
+                }}
                 
                 // Function to keep the info window open while interacting with it
-                function keepInfoWindowOpen() {
-                    if (infoWindow) {
-                        google.maps.event.addListener(infoWindow, 'domready', function() {
+                function keepInfoWindowOpen() {{
+                    if (infoWindow) {{
+                        google.maps.event.addListener(infoWindow, 'domready', function() {{
                             var iwOuter = document.querySelector('.gm-style-iw');
-                            if (iwOuter) {
+                            if (iwOuter) {{
                                 iwOuter.parentNode.style.pointerEvents = 'auto';
-                            }
-                        });
-                    }
-                }
+                            }}
+                        }});
+                    }}
+                }}
             </script>
         </head>
         <body onload="initMap()">
@@ -663,7 +662,7 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
     
     
     units_sold = filtered_df_1['units'].sum()
-    unit_count_text = f"Total Units Sold: {units_sold} {google_api_key}"
+    unit_count_text = f"Total Units Sold: {units_sold}"
         
     custom_order = ['<700', '700-899', '900-1199', '1200+','Unknown']
         
