@@ -444,21 +444,21 @@ def render_content(tab):
             html.Div(id='map', children=[
                 html.Iframe(
                     id='map-frame',
-                    srcDoc='''
+                    srcDoc=f'''
                         <!DOCTYPE html>
                         <html>
                         <head>
                             <title>Addresses Map</title>
                             <script src="https://maps.googleapis.com/maps/api/js?key={google_api_key}&callback=initMap" async defer></script>
                             <script>
-                                function initMap() {
-                                    var map = new google.maps.Map(document.getElementById('map'), {
+                                function initMap() {{
+                                    var map = new google.maps.Map(document.getElementById('map'), {{
                                         zoom: 12,
-                                        center: {lat: 43.65107, lng: -79.347015}
-                                    });
+                                        center: {{lat: 43.65107, lng: -79.347015}}
+                                    }});
 
 
-                                }
+                                }}
                             </script>
                         </head>
                         <body onload="initMap()">
