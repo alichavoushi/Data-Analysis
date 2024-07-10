@@ -450,19 +450,27 @@ def render_content(tab):
                         <head>
                             <title>Addresses Map</title>
                             <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
+                            <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
                             <script>
                                 function initMap() {
-                                    var map = new google.maps.Map(document.getElementById('map'), {
-                                        zoom: 12,
-                                        center: {lat: 43.65107, lng: -79.347015}
+                                    var map = new google.maps.Map(document.getElementById('inner-map'), {
+                                      zoom: 12,
+                                      center: { lat: 43.65107, lng: -79.347015 },
                                     });
-
-
+                                    window.map = map;
+                                    
+                                    window.locations = [];
+                                    var markers = window.locations.map((location) => {
+                                      return new google.maps.Marker({
+                                        position: location,
+                                      });
+                                    });
+                                    new markerClusterer.MarkerClusterer({ map, markers });
                                 }
                             </script>
                         </head>
                         <body onload="initMap()">
-                            <div id="map" style="height: 500px; width: 100%;"></div>
+                            <div id="inner-map" style="height: 500px; width: 100%;"></div>
                         </body>
                         </html>
                     ''',
@@ -523,26 +531,14 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
         <head>
             <title>Addresses Map</title>
             <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
-            <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
+            <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
             <script>
-                var map;
-                var markers = [];
-                var markerCluster;
                 
                 function initMap() {
-                    map = new google.maps.Map(document.getElementById('map'), {
-                        zoom: 12,
-                        center: {lat: 43.65107, lng: -79.347015}
+                    var map = new google.maps.Map(document.getElementById('inner-map'), {
+                      zoom: 12,
+                      center: { lat: 43.65107, lng: -79.347015},
                     });
-                    updateMap();
-                }
-                
-                function updateMap() {
-                    // Clear existing markers
-                    markers.forEach(function(marker) {
-                        marker.setMap(null);
-                    });
-                    markers = [];
 
                     // Define locations and their aggregated data
                     var locations = [
@@ -557,25 +553,23 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
                     
                     
                     // Loop through locations to create markers
-                    locations.forEach(function(loc) {
+                    var markers = locations.map((loc) => {
                         var marker = new google.maps.Marker({
                             position: {lat: loc.lat, lng: loc.lng},
                             map: map,
                             title: loc.shortAddress,
                             icon: {
                                 url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                                scaledSize: new google.maps.Size(32, 32) // Adjust the size here
+                                scaledSize: new google.maps.Size(32, 32)
                             }
                         });
-                        
-                        markers.push(marker);
                     
                         // Create content for the tooltip
-                        var tooltipContent = '<div style="font-size: 10px;">'; 
-                        
-                        tooltipContent += `<strong>Address:</strong> ${loc.shortAddress}<br><br>`;
+                        var tooltipContent = '<div style="font-size: 10px;">' + 
+                                                `<strong>Address:</strong> ${loc.shortAddress}<br><br>`;
 
-                        loc.data.forEach(function(row) {
+
+                        loc.data.forEach(row => {
                             tooltipContent += `
                                 <strong>Beds:</strong> ${row.Beds}<br>
                                 <strong>SqFt:</strong> ${row.SqFt_Category}<br>
@@ -589,26 +583,20 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
 
 
                         tooltipContent += '</div>';
-
-                        // Create info window for each marker
                         var infoWindow = new google.maps.InfoWindow({
                             content: tooltipContent
                         });
 
-                        // Event listener to show info window on marker hover
-                        marker.addListener('click', function() {
+                        marker.addListener('click', () => {
                             infoWindow.open(map, marker);
                         });
 
-                        
-                    });
-                    
-                    // Add MarkerClusterer to manage markers
-                    var markerCluster = new MarkerClusterer(map, markers, {
-                        imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
+                        return marker;
                     });
 
+                    new markerClusterer.MarkerClusterer({ map, markers });
                 }
+  
                 
                 // Function to keep the info window open while interacting with it
                 function keepInfoWindowOpen() {
@@ -624,7 +612,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
             </script>
         </head>
         <body onload="initMap()">
-            <div id="map" style="height: 500px; width: 100%;"></div>
+            <div id="inner-map" style="height: 500px; width: 100%;"></div>
         </body>
         </html>
     '''
