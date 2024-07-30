@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sqlalchemy import create_engine
 import plotly.express as px
 from dash import Dash, dcc, html
 import dash_bootstrap_components as dbc
@@ -10,21 +11,26 @@ import json
 #from geopy.geocoders import GoogleV3
 #from geopy.extra.rate_limiter import RateLimiter
 import os
-#AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg
+
 google_api_key = os.getenv('GOOGLE_API_KEY')
-DATABASE_URL = os.getenv('DATABASE_URL')
 
 url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_geo2.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
-#df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_geo2.csv', encoding='ISO-8859-1')
+#df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_geo3 - Copy.csv', encoding='ISO-8859-1')
 df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
 
 # Create a DataFrame
 df1 = pd.DataFrame(df)
+df1=df1[df1['Community'] == 'University']
 df1['Apt/Unit #'] = df1['Apt/Unit #'].str.replace('#', '')
 df1.fillna({'Street #': '', 'Street Name': ''}, inplace=True)
 df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(str)
-df1['Sold Price'] = pd.to_numeric(df1['Sold Price'], errors='coerce')
+df1['Sold Price'] = df1['Sold Price'].replace('[\$,]', '', regex=True).astype(float)
 df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(str)#+" st, Toronto, ON, Canada"
+
+df1['Area'] = df1['Area'].replace('[\D]', '', regex=True).astype(float)
+
+ # Calculate price per square foot only for rows with valid 'Area'
+df1['Price per SqFt'] = df1.apply(lambda row: row['Sold Price'] / row['Area'] if pd.notnull(row['Area']) else float('nan'), axis=1)
 # Initialize geocoder
 
 def calculate_floor(row):
@@ -108,36 +114,48 @@ def map_exposure_to_category(exposure):
 
 df1['Exposure_Category'] = df1['Exposure'].apply(map_exposure_to_category)
 
-condition = (df1['Status'] == 'Sold') & (df1['Municipality District'] == 'Toronto C01')& (df1['Sold Price'] < 2000000)
+condition = (df1['Status'] == 'Sold') & (df1['Municipality District'] == 'Toronto C01')
 
-filtered_selected_columns = df1[condition][['Community', 'Short Address','Beds', 'SqFt_Category', 'Sold Price','DOM','Exposure_Category','Floor_Category','Latitude','Longitude']]
+filtered_selected_columns = df1[condition][['Community', 'Short Address','Beds', 'SqFt_Category', 'Sold Price','DOM','Exposure_Category','Floor_Category','Latitude','Longitude','Area','Price per SqFt']]
+
 # Convert 'Sold Price' column to numeric
 filtered_selected_columns['Sold Price'] = pd.to_numeric(filtered_selected_columns['Sold Price'], errors='coerce')
 filtered_selected_columns['DOM'] = pd.to_numeric(filtered_selected_columns['DOM'], errors='coerce')
+filtered_selected_columns['Price per SqFt'] = pd.to_numeric(filtered_selected_columns['Price per SqFt'], errors='coerce')
+filtered_selected_columns['Area'] = pd.to_numeric(filtered_selected_columns['Area'], errors='coerce')
 filtered_selected_columns['Community'] = filtered_selected_columns['Community'].astype(str)
 
-filtered_selected_columns_2 = df1[condition][['Community', 'Short Address','Beds', 'SqFt', 'Sold Price','DOM','Exposure_Category','Floor_Category','Latitude','Longitude']]
+filtered_selected_columns_2 = df1[condition][['Community', 'Short Address','Beds', 'SqFt', 'Sold Price','DOM','Exposure_Category','Floor_Category','Latitude','Longitude','Area','Price per SqFt']]
 filtered_selected_columns_2['Sold Price'] = pd.to_numeric(filtered_selected_columns_2['Sold Price'], errors='coerce')
 filtered_selected_columns_2['DOM'] = pd.to_numeric(filtered_selected_columns_2['DOM'], errors='coerce')
+filtered_selected_columns_2['Price per SqFt'] = pd.to_numeric(filtered_selected_columns_2['Price per SqFt'], errors='coerce')
+filtered_selected_columns_2['Price per SqFt'] = np.ceil(filtered_selected_columns_2['Price per SqFt'])
+filtered_selected_columns_2['Area'] = pd.to_numeric(filtered_selected_columns_2['Area'], errors='coerce')
 filtered_selected_columns_2['Community'] = filtered_selected_columns_2['Community'].astype(str)
 filtered_selected_columns_2['SqFt'] = filtered_selected_columns_2['SqFt'].astype(str)
 
 grouped_df_1 = filtered_selected_columns.groupby(['Community', 'SqFt_Category','Beds', 'Floor_Category','Exposure_Category']).agg(
     avg_sold_price=('Sold Price', 'mean'),
+    avg_sold_price_per_sqft=('Price per SqFt', 'mean'),
+    avg_sqft=('Area', 'mean'),
     avg_DOM=('DOM', 'mean'),
     units=('Community', 'size')
 ).reset_index()
 
 grouped_df_1['avg_sold_price'] = np.ceil(grouped_df_1['avg_sold_price'])
+grouped_df_1['avg_sold_price_per_sqft'] = np.ceil(grouped_df_1['avg_sold_price_per_sqft'])
 grouped_df_1['avg_DOM'] = np.ceil(grouped_df_1['avg_DOM'])
 
 grouped_df_2 = filtered_selected_columns.groupby(['Community', 'Short Address','SqFt_Category','Beds','Floor_Category','Exposure_Category','Latitude','Longitude']).agg(
     avg_sold_price=('Sold Price', 'mean'),
+    avg_sold_price_per_sqft=('Price per SqFt', 'mean'),
+    avg_sqft=('Area', 'mean'),
     avg_DOM=('DOM', 'mean'),
     units=('Community', 'size')
 ).reset_index()
 
 grouped_df_2['avg_sold_price'] = np.ceil(grouped_df_2['avg_sold_price'])
+grouped_df_2['avg_sold_price_per_sqft'] = np.ceil(grouped_df_2['avg_sold_price_per_sqft'])
 grouped_df_2['avg_DOM'] = np.ceil(grouped_df_2['avg_DOM'])
 
 # Define slicers (dropdowns) for filtering data tab-1
@@ -173,7 +191,7 @@ app.config.suppress_callback_exceptions = True
 app.layout = html.Div([
     dcc.Tabs(id='tabs', value='tab-1', children=[
         dcc.Tab(label='2024 YTD Summarized Sold Analysis by Community and Unit Details', value='tab-1', style={'font-size': '12px'}),
-        dcc.Tab(label='2024 YTD Sold Analysis by Address and Unit Details', value='tab-2', style={'font-size': '12px'}),
+        dcc.Tab(label='2024 YTD Sold Analysis Summary by Address', value='tab-2', style={'font-size': '12px'}),
         dcc.Tab(label='2024 YTD Sold Analysis by Address and Unit Details', value='tab-4', style={'font-size': '12px'}),
         dcc.Tab(label='Map View', value='tab-3', style={'font-size': '12px'}),
     ]),
@@ -450,7 +468,7 @@ def render_content(tab):
                         <html>
                         <head>
                             <title>Addresses Map</title>
-                            <script src="https://maps.googleapis.com/maps/api/js?key='google_api_key'&callback=initMap" async defer></script>
+                            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
                             <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
                             <script>
                                 function initMap() {
@@ -531,7 +549,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
         <html>
         <head>
             <title>Addresses Map</title>
-            <script src="https://maps.googleapis.com/maps/api/js?key='google_api_key'&callback=initMap" async defer></script>
+            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
             <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
             <script>
                 
@@ -547,7 +565,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
 
     # Construct each location with aggregated data in JavaScript format
     for location, rows in grouped_locations.items():
-        js_code += f"{{lat: {location[0]}, lng: {location[1]}, shortAddress: '{rows[0]['Short Address']}', data: {json.dumps([{'Beds': row['Beds'], 'SqFt_Category': row['SqFt_Category'], 'Exposure_Category': row['Exposure_Category'], 'Floor_Category': row['Floor_Category'],'units': row['units'], 'avgSoldPrice': row['avg_sold_price'], 'DOM': row['avg_DOM']} for row in rows])}}},\n"
+        js_code += f"{{lat: {location[0]}, lng: {location[1]}, shortAddress: '{rows[0]['Short Address']}', data: {json.dumps([{'Beds': row['Beds'], 'SqFt_Category': row['SqFt_Category'], 'Exposure_Category': row['Exposure_Category'], 'Floor_Category': row['Floor_Category'],'units': row['units'], 'avgSoldPrice': row['avg_sold_price'], 'DOM': row['avg_DOM'], 'Area': row['avg_sqft'], 'avg_sold_price_per_sqft': row['avg_sold_price_per_sqft']} for row in rows])}}},\n"
 
     js_code += '''
                     ];
@@ -574,11 +592,13 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
                             tooltipContent += `
                                 <strong>Beds:</strong> ${row.Beds}<br>
                                 <strong>SqFt:</strong> ${row.SqFt_Category}<br>
+                                <strong>Area(sqft):</strong> ${row.Area}<br>
                                 <strong>Exposure:</strong> ${row.Exposure_Category}<br>
                                 <strong>Floor Level:</strong> ${row.Floor_Category}<br>
                                 <strong>Units:</strong> ${row.units}<br>
-                                <strong>Avg Sold Price:</strong> $${row.avgSoldPrice.toLocaleString()}<br>
-                                <strong>Avg DOM:</strong> ${row.DOM}<br><br>
+                                <strong>Sold Price:</strong> $${row.avgSoldPrice.toLocaleString()}<br>
+                                <strong>DOM:</strong> ${row.DOM}<br>
+                                <strong>sold_price_per_sqft:</strong> ${row.avg_sold_price_per_sqft}<br><br>
                             `;
                         });
 
@@ -660,7 +680,7 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
     
     fig = px.scatter(filtered_df_1, x='SqFt_Category', y='avg_sold_price', color='Community',
                      size='units',# hover_name='Community',
-                     hover_data=['Beds','Floor_Category','Exposure_Category','units','avg_DOM'],
+                     hover_data=['Beds','Floor_Category','Exposure_Category','units','avg_DOM','avg_sqft','avg_sold_price_per_sqft'],
                      labels={'SqFt_Category': 'Square Feet', 'Sold Price': 'Average Sold Price'},
                      title='Average Sold Price by Square Feet and Community')
 
@@ -735,7 +755,7 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
     
     fig = px.scatter(filtered_df_2, x='Short Address', y='avg_sold_price', color='Short Address',
                      size='units',# hover_name='Community',
-                     hover_data=['SqFt_Category','Beds','Floor_Category','Exposure_Category','units','avg_DOM'],
+                     hover_data=['SqFt_Category','Beds','Floor_Category','Exposure_Category','units','avg_DOM','avg_sqft','avg_sold_price_per_sqft'],
                      labels={'Short Address': 'Address', 'Sold Price': 'Average Sold Price'},
                      title='Average Sold Price by Address')
 
@@ -811,7 +831,7 @@ def update_scatter_plot_4(selected_communities, selected_short_address,selected_
     
     fig = px.scatter(filtered_df_4, x='Short Address', y='Sold Price', color='Short Address',
                      size='DOM',# hover_name='Community',
-                     hover_data=['SqFt','Beds','Floor_Category','Exposure_Category','DOM'],
+                     hover_data=['SqFt','Beds','Floor_Category','Exposure_Category','DOM','Area','Price per SqFt'],
                      labels={'Short Address': 'Address', 'Sold Price': 'Sold Price'},
                      title='Sold Price by Address')
 
