@@ -544,7 +544,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
         grouped_locations[key].append(row)
 
     # Generate JavaScript to update map markers based on grouped_locations
-    js_code = '''
+    js_code = f'''
         <!DOCTYPE html>
         <html>
         <head>
@@ -553,11 +553,11 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
             <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
             <script>
                 
-                function initMap() {
-                    var map = new google.maps.Map(document.getElementById('inner-map'), {
+                function initMap() {{
+                    var map = new google.maps.Map(document.getElementById('inner-map'), {{
                       zoom: 12,
-                      center: { lat: 43.65107, lng: -79.347015},
-                    });
+                      center: {{ lat: 43.65107, lng: -79.347015}},
+                    }});
 
                     // Define locations and their aggregated data
                     var locations = [
