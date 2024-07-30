@@ -468,7 +468,7 @@ def render_content(tab):
                         <html>
                         <head>
                             <title>Addresses Map</title>
-                            <script src="https://maps.googleapis.com/maps/api/js?key={{google_api_key}}&callback=initMap" async defer></script>
+                            <script src="https://maps.googleapis.com/maps/api/js?key={google_api_key}&callback=initMap" async defer></script>
                             <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
                             <script>
                                 function initMap() {
@@ -549,7 +549,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
         <html>
         <head>
             <title>Addresses Map</title>
-            <script src="https://maps.googleapis.com/maps/api/js?key={{google_api_key}}&callback=initMap" async defer></script>
+            <script src="https://maps.googleapis.com/maps/api/js?key={google_api_key}&callback=initMap" async defer></script>
             <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
             <script>
                 
