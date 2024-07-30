@@ -463,29 +463,29 @@ def render_content(tab):
             html.Div(id='map', children=[
                 html.Iframe(
                     id='map-frame',
-                    srcDoc='''
+                    srcDoc=f'''
                         <!DOCTYPE html>
                         <html>
                         <head>
                             <title>Addresses Map</title>
-                            <script src=f"https://maps.googleapis.com/maps/api/js?key={google_api_key}&callback=initMap" async defer></script>
+                            <script src="https://maps.googleapis.com/maps/api/js?key={google_api_key}&callback=initMap" async defer></script>
                             <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
                             <script>
-                                function initMap() {
-                                    var map = new google.maps.Map(document.getElementById('inner-map'), {
+                                function initMap() {{
+                                    var map = new google.maps.Map(document.getElementById('inner-map'), {{
                                       zoom: 12,
-                                      center: { lat: 43.65107, lng: -79.347015 },
-                                    });
+                                      center: {{ lat: 43.65107, lng: -79.347015 }},
+                                    }});
                                     window.map = map;
                                     
                                     window.locations = [];
-                                    var markers = window.locations.map((location) => {
-                                      return new google.maps.Marker({
+                                    var markers = window.locations.map((location) => {{
+                                      return new google.maps.Marker({{
                                         position: location,
-                                      });
-                                    });
-                                    new markerClusterer.MarkerClusterer({ map, markers });
-                                }
+                                      }});
+                                    }});
+                                    new markerClusterer.MarkerClusterer({{ map, markers }});
+                                }}
                             </script>
                         </head>
                         <body onload="initMap()">
