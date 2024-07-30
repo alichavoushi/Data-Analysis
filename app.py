@@ -10,8 +10,9 @@ import json
 #from geopy.geocoders import GoogleV3
 #from geopy.extra.rate_limiter import RateLimiter
 import os
-
+#AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg
 google_api_key = os.getenv('GOOGLE_API_KEY')
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_geo2.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
 #df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_geo2.csv', encoding='ISO-8859-1')
@@ -449,7 +450,7 @@ def render_content(tab):
                         <html>
                         <head>
                             <title>Addresses Map</title>
-                            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
+                            <script src="https://maps.googleapis.com/maps/api/js?key=google_api_key&callback=initMap" async defer></script>
                             <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
                             <script>
                                 function initMap() {
@@ -530,7 +531,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
         <html>
         <head>
             <title>Addresses Map</title>
-            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyOkoHPze8R50hkEJpqZD9veJzJIWQxUg&callback=initMap" async defer></script>
+            <script src="https://maps.googleapis.com/maps/api/js?key=google_api_key&callback=initMap" async defer></script>
             <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
             <script>
                 
