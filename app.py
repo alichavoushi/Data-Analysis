@@ -190,7 +190,7 @@ app.config.suppress_callback_exceptions = True
 # Define the layout of the web application
 app.layout = html.Div([
     dcc.Tabs(id='tabs', value='tab-1', children=[
-        dcc.Tab(label='2024 YTD Summarized Sold Analysis by Community and Unit Details', value='tab-1', style={'font-size': '12px'}),
+        dcc.Tab(label='{google_api_key}2024 YTD Summarized Sold Analysis by Community and Unit Details', value='tab-1', style={'font-size': '12px'}),
         dcc.Tab(label='2024 YTD Sold Analysis Summary by Address', value='tab-2', style={'font-size': '12px'}),
         dcc.Tab(label='2024 YTD Sold Analysis by Address and Unit Details', value='tab-4', style={'font-size': '12px'}),
         dcc.Tab(label='Map View', value='tab-3', style={'font-size': '12px'}),
