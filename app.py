@@ -190,7 +190,7 @@ app.config.suppress_callback_exceptions = True
 # Define the layout of the web application
 app.layout = html.Div([
     dcc.Tabs(id='tabs', value='tab-1', children=[
-        dcc.Tab(label='{google_api_key}2024 YTD Summarized Sold Analysis by Community and Unit Details', value='tab-1', style={'font-size': '12px'}),
+        dcc.Tab(label='2024 YTD Summarized Sold Analysis by Community and Unit Details', value='tab-1', style={'font-size': '12px'}),
         dcc.Tab(label='2024 YTD Sold Analysis Summary by Address', value='tab-2', style={'font-size': '12px'}),
         dcc.Tab(label='2024 YTD Sold Analysis by Address and Unit Details', value='tab-4', style={'font-size': '12px'}),
         dcc.Tab(label='Map View', value='tab-3', style={'font-size': '12px'}),
@@ -468,7 +468,7 @@ def render_content(tab):
                         <html>
                         <head>
                             <title>Addresses Map</title>
-                            <script src="https://maps.googleapis.com/maps/api/js?key={google_api_key}&callback=initMap" async defer></script>
+                            <script src=f"https://maps.googleapis.com/maps/api/js?key={google_api_key}&callback=initMap" async defer></script>
                             <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
                             <script>
                                 function initMap() {
@@ -549,7 +549,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
         <html>
         <head>
             <title>Addresses Map</title>
-            <script src="https://maps.googleapis.com/maps/api/js?key={google_api_key}&callback=initMap" async defer></script>
+            <script src=f"https://maps.googleapis.com/maps/api/js?key={google_api_key}&callback=initMap" async defer></script>
             <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
             <script>
                 
