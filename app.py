@@ -16,8 +16,8 @@ import os
 google_api_key = os.getenv('GOOGLE_API_KEY')
 
 # Get the DATABASE_URL from environment variables
-DATABASE_URL = os.getenv('DATABASE_URL')
-
+#DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = 'postgresql://ubg5jsrlec62pr:pe2b38482019c0c3457fd53d72bc162447a0f17e0ad4aacc573461e439ad6109b@c3nv2ev86aje4j.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d5hoo6brca8qcm'
 # Create the database engine
 engine = create_engine(DATABASE_URL)
 
@@ -30,7 +30,7 @@ df1 = pd.read_sql(query, engine)
 
 # Create a DataFrame
 #df1 = pd.DataFrame(df)
-df1=df1[df1['Community'] == 'University']
+#df1=df1[df1['Community'] == 'University']
 df1['Apt/Unit #'] = df1['Apt/Unit #'].str.replace('#', '')
 df1.fillna({'Street #': '', 'Street Name': ''}, inplace=True)
 df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(str)
