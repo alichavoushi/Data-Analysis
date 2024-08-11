@@ -21,12 +21,15 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 # Create the database engine
 engine = create_engine(DATABASE_URL)
 
-url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_reyhan.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
+query = 'SELECT * FROM public."TRREB";'
+df1 = pd.read_sql(query, engine)
+
+#url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_reyhan.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
 #df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_geo3 - Copy.csv', encoding='ISO-8859-1')
-df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
+#df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
 
 # Create a DataFrame
-df1 = pd.DataFrame(df)
+#df1 = pd.DataFrame(df)
 df1=df1[df1['Community'] == 'University']
 df1['Apt/Unit #'] = df1['Apt/Unit #'].str.replace('#', '')
 df1.fillna({'Street #': '', 'Street Name': ''}, inplace=True)
