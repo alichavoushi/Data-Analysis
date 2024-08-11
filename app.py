@@ -16,8 +16,11 @@ import os
 google_api_key = os.getenv('GOOGLE_API_KEY')
 
 # Get the DATABASE_URL from environment variables
-#DATABASE_URL = os.getenv('DATABASE_URL')
-DATABASE_URL = 'postgresql://ubg5jsrlec62pr:pe2b38482019c0c3457fd53d72bc162447a0f17e0ad4aacc573461e439ad6109b@c3nv2ev86aje4j.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d5hoo6brca8qcm'
+DATABASE_URL = os.getenv('DATABASE_URL')
+# Correct the URL if needed
+if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+#DATABASE_URL = 'postgresql://ubg5jsrlec62pr:pe2b38482019c0c3457fd53d72bc162447a0f17e0ad4aacc573461e439ad6109b@c3nv2ev86aje4j.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d5hoo6brca8qcm'
 # Create the database engine
 engine = create_engine(DATABASE_URL)
 
