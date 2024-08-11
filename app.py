@@ -8,11 +8,18 @@ from dash.dependencies import Output, Input, State
 from dash import dcc, html, Input, Output
 from collections import defaultdict
 import json
+from sqlalchemy import create_engine
 #from geopy.geocoders import GoogleV3
 #from geopy.extra.rate_limiter import RateLimiter
 import os
 
 google_api_key = os.getenv('GOOGLE_API_KEY')
+
+# Get the DATABASE_URL from environment variables
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+# Create the database engine
+engine = create_engine(DATABASE_URL)
 
 url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_reyhan.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
 #df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_geo3 - Copy.csv', encoding='ISO-8859-1')
