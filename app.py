@@ -14,7 +14,7 @@ import os
 
 google_api_key = os.getenv('GOOGLE_API_KEY')
 
-url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_geo3%20-%20Copy.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
+url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_reyhan.csv?token=GHSAT0AAAAAACTJ6SFA3RDVKP5BJISQ2XDUZTCMYRQ"
 #df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_geo3 - Copy.csv', encoding='ISO-8859-1')
 df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
 
@@ -30,7 +30,8 @@ df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(s
 df1['Area'] = df1['Area'].replace('[\D]', '', regex=True).astype(float)
 
  # Calculate price per square foot only for rows with valid 'Area'
-df1['Price per SqFt'] = df1.apply(lambda row: row['Sold Price'] / row['Area'] if pd.notnull(row['Area']) else float('nan'), axis=1)
+df1['Price per SqFt'] = df1.apply(lambda row: row['Sold Price'] / row['Area'] if pd.notnull(row['Area']) and row['Area'] != 0 else float('nan'), axis=1)
+
 # Initialize geocoder
 
 def calculate_floor(row):
