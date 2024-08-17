@@ -156,6 +156,9 @@ grouped_df_1 = filtered_selected_columns.groupby(['Community', 'SqFt_Category','
     units=('Community', 'size')
 ).reset_index()
 
+min_sold_price = grouped_df_1['avg_sold_price'].min()
+max_sold_price = grouped_df_1['avg_sold_price'].max()
+
 grouped_df_1['avg_sold_price'] = np.ceil(grouped_df_1['avg_sold_price'])
 grouped_df_1['avg_sold_price_per_sqft'] = np.ceil(grouped_df_1['avg_sold_price_per_sqft'])
 grouped_df_1['avg_DOM'] = np.ceil(grouped_df_1['avg_DOM'])
@@ -224,6 +227,23 @@ def render_content(tab):
                 dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
                 dbc.Collapse(
                     dbc.Card(dbc.CardBody([
+                        # Sold Price Slider
+                        html.Label('Sold Price Range'),
+                        dcc.RangeSlider(
+                            id='sold-price-slider',
+                            #min=min_sold_price,
+                            min=300000,
+                            max=max_sold_price,
+                            step=50000,
+                            value=[min_sold_price, max_sold_price],
+                            # Custom marks for better readability
+                            #marks={i: f'${i//1000}K' for i in range(int(min_sold_price), int(max_sold_price)+1, 200000)},  # Increase interval to reduce clutter
+                            marks=None,
+                            tooltip={"placement": "bottom", "always_visible": False},   # Tooltip only shows when the slider is being moved
+                        ),
+                        html.Div(id='slider-output-container', style={'margin-top': '20px', 'font-size': 'large'}),
+                        
+                        
                         html.Label('Select Community:', style={'font-size': 'smaller'}),
                         dcc.Dropdown(
                             id='community-filter-1',
@@ -264,6 +284,7 @@ def render_content(tab):
                             multi=True,
                             style={'font-size': 'smaller', 'width': '100%'}
                         ),
+                        
                     ])),
                     id="collapse",
                     is_open=False,
@@ -279,12 +300,29 @@ def render_content(tab):
         ], fluid=True)
 
 
+    
     elif tab == 'tab-2':
        return dbc.Container([
             html.Div([
                 dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
                 dbc.Collapse(
                     dbc.Card(dbc.CardBody([
+                        # Sold Price Slider
+                        html.Label('Sold Price Range'),
+                        dcc.RangeSlider(
+                            id='sold-price-slider',
+                            #min=min_sold_price,
+                            min=300000,
+                            max=max_sold_price,
+                            step=50000,
+                            value=[min_sold_price, max_sold_price],
+                            # Custom marks for better readability
+                            #marks={i: f'${i//1000}K' for i in range(int(min_sold_price), int(max_sold_price)+1, 200000)},  # Increase interval to reduce clutter
+                            marks=None,
+                            tooltip={"placement": "bottom", "always_visible": False},   # Tooltip only shows when the slider is being moved
+                        ),
+                        html.Div(id='slider-output-container', style={'margin-top': '20px', 'font-size': 'large'}),
+                        
                         html.Label('Select Community:', style={'font-size': 'smaller'}),
                         dcc.Dropdown(
                             id='community-filter-2',
@@ -333,6 +371,7 @@ def render_content(tab):
                             multi=True,
                             style={'font-size': 'smaller', 'width': '100%'}
                         ),
+                        
                     ])),
                     id="collapse",
                     is_open=False,
@@ -351,6 +390,22 @@ def render_content(tab):
                 dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
                 dbc.Collapse(
                     dbc.Card(dbc.CardBody([
+                        # Sold Price Slider
+                        html.Label('Sold Price Range'),
+                        dcc.RangeSlider(
+                            id='sold-price-slider',
+                            #min=min_sold_price,
+                            min=300000,
+                            max=max_sold_price,
+                            step=50000,
+                            value=[min_sold_price, max_sold_price],
+                            # Custom marks for better readability
+                            #marks={i: f'${i//1000}K' for i in range(int(min_sold_price), int(max_sold_price)+1, 200000)},  # Increase interval to reduce clutter
+                            marks=None,
+                            tooltip={"placement": "bottom", "always_visible": False},   # Tooltip only shows when the slider is being moved
+                        ),
+                        html.Div(id='slider-output-container', style={'margin-top': '20px', 'font-size': 'large'}),
+                        
                         html.Label('Select Community:', style={'font-size': 'smaller'}),
                         dcc.Dropdown(
                             id='community-filter-4',
@@ -399,6 +454,7 @@ def render_content(tab):
                             multi=True,
                             style={'font-size': 'smaller', 'width': '100%'}
                         ),
+                        
                     ])),
                     id="collapse",
                     is_open=False,
@@ -419,6 +475,22 @@ def render_content(tab):
                     dbc.Card(dbc.CardBody([
                         html.H3('Google Map'),
                         html.Div([
+                            # Sold Price Slider
+                            html.Label('Sold Price Range'),
+                            dcc.RangeSlider(
+                                id='sold-price-slider',
+                                #min=min_sold_price,
+                                min=300000,
+                                max=max_sold_price,
+                                step=50000,
+                                value=[min_sold_price, max_sold_price],
+                                # Custom marks for better readability
+                                #marks={i: f'${i//1000}K' for i in range(int(min_sold_price), int(max_sold_price)+1, 200000)},  # Increase interval to reduce clutter
+                                marks=None,
+                                tooltip={"placement": "bottom", "always_visible": False},   # Tooltip only shows when the slider is being moved
+                            ),
+                            html.Div(id='slider-output-container', style={'margin-top': '20px', 'font-size': 'large'}),
+                            
                             html.Label('Select Community:', style={'font-size': 'smaller'}),
                             dcc.Dropdown(
                                 id='community-filter-3',
@@ -473,7 +545,7 @@ def render_content(tab):
                     is_open=False,
                 ),
             ]),
-
+            
             html.Div(id='map', children=[
                 html.Iframe(
                     id='map-frame',
@@ -530,6 +602,8 @@ def set_short_address_options_3(selected_communities):
    
     return short_address_options, [option['value'] for option in short_address_options]
 
+# Slider callback to update the selected price range with comma separators
+
 @app.callback(
     Output('map-frame', 'srcDoc'),
     [Input('community-filter-3', 'value'),
@@ -537,18 +611,19 @@ def set_short_address_options_3(selected_communities):
     Input('bedroom-filter-3', 'value'),
     Input('sqft-filter-3', 'value'),
     Input('exposure-filter-3', 'value'),
-    Input('floor-category-filter-3', 'value')]
+    Input('floor-category-filter-3', 'value'),
+    Input('sold-price-slider', 'value')]
 )
-
-
-def update_map(communities, addresses, bedrooms, sqft_categories, exposures, floor_categories):
+def update_map(communities, addresses, bedrooms, sqft_categories, exposures, floor_categories, selected_price_range):
     filtered_df_3 = grouped_df_2[
         grouped_df_2['Community'].isin(communities) &
         grouped_df_2['Short Address'].isin(addresses) &
         grouped_df_2['Beds'].isin(bedrooms) &
         grouped_df_2['SqFt_Category'].isin(sqft_categories) &
         grouped_df_2['Exposure_Category'].isin(exposures) &
-        grouped_df_2['Floor_Category'].isin(floor_categories)
+        grouped_df_2['Floor_Category'].isin(floor_categories)&
+        (grouped_df_2['avg_sold_price'] >= selected_price_range[0]) & 
+        (grouped_df_2['avg_sold_price'] <= selected_price_range[1])
     ]
     
     # Group by latitude and longitude to aggregate data for each unique location
@@ -663,6 +738,16 @@ def toggle_collapse(n, is_open):
     if n:
         return not is_open
     return is_open
+# Shared callback for all sliders across tabs
+@app.callback(
+    Output('slider-output-container', 'children'),
+    Input('sold-price-slider', 'value'),
+    Input('tabs', 'value')
+)
+def update_slider_output(value, tab):
+    formatted_value = f"${value[0]:,} - ${value[1]:,}"
+    return f"Selected Sold Price Range in {tab}: {formatted_value}"
+
 # Callback to update scatter plot based on slicer values for tab-1
 # Define callback to update scatter plot based on slicer values
 @app.callback(
@@ -672,16 +757,19 @@ def toggle_collapse(n, is_open):
      Input('bedroom-filter-1', 'value'),
      Input('sqft-filter-1', 'value'),
      Input('exposure-filter-1', 'value'),
-     Input('floor-category-filter-1', 'value')]
+     Input('floor-category-filter-1', 'value'),
+     Input('sold-price-slider', 'value')]
 )
-
-
-def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category):
+def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range):
     filtered_df_1 = grouped_df_1[grouped_df_1['Community'].isin(selected_communities) & 
                              grouped_df_1['Beds'].isin(selected_bedrooms) & 
                              grouped_df_1['SqFt_Category'].isin(selected_sqft) &
                              grouped_df_1['Exposure_Category'].isin(selected_exposure) &
-                             grouped_df_1['Floor_Category'].isin(selected_floor_category)]
+                             grouped_df_1['Floor_Category'].isin(selected_floor_category)&
+                            (grouped_df_1['avg_sold_price'] >= selected_price_range[0]) &  # Filter based on selected price range
+                            (grouped_df_1['avg_sold_price'] <= selected_price_range[1])]     # Filter based on selected price range
+                            
+    
     
     
     units_sold = filtered_df_1['units'].sum()
@@ -743,6 +831,7 @@ def set_short_address_options(selected_communities):
 
     
     return short_address_options, [option['value'] for option in short_address_options]
+
 # Callback to update scatter plot based on slicer values for tab-2
 # Define callback to update scatter plot based on slicer values
 @app.callback(
@@ -753,16 +842,19 @@ def set_short_address_options(selected_communities):
      Input('bedroom-filter-2', 'value'),
      Input('sqft-filter-2', 'value'),
      Input('exposure-filter-2', 'value'),
-     Input('floor-category-filter-2', 'value')]
+     Input('floor-category-filter-2', 'value'),
+     Input('sold-price-slider', 'value')]
 )
 
-def update_scatter_plot_2(selected_communities, selected_short_address,selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category):
+def update_scatter_plot_2(selected_communities, selected_short_address,selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range):
     filtered_df_2 = grouped_df_2[grouped_df_2['Community'].isin(selected_communities) & 
                              grouped_df_2['Short Address'].isin(selected_short_address) & 
                              grouped_df_2['Beds'].isin(selected_bedrooms) & 
                              grouped_df_2['SqFt_Category'].isin(selected_sqft) &
                              grouped_df_2['Exposure_Category'].isin(selected_exposure) &
-                             grouped_df_2['Floor_Category'].isin(selected_floor_category)]
+                             grouped_df_2['Floor_Category'].isin(selected_floor_category)&
+                            (grouped_df_2['avg_sold_price'] >= selected_price_range[0]) &  # Filter based on selected price range
+                            (grouped_df_2['avg_sold_price'] <= selected_price_range[1])]     # Filter based on selected price range]
  
     units_sold = filtered_df_2['units'].sum()
     unit_count_text = f"Total Units Sold: {units_sold}"   
@@ -819,6 +911,7 @@ def set_short_address_options_4(selected_communities):
 
     
     return short_address_options_4, [option['value'] for option in short_address_options_4]
+
 # Callback to update scatter plot based on slicer values for tab-2
 # Define callback to update scatter plot based on slicer values
 @app.callback(
@@ -829,16 +922,19 @@ def set_short_address_options_4(selected_communities):
      Input('bedroom-filter-4', 'value'),
      Input('sqft-filter-4', 'value'),
      Input('exposure-filter-4', 'value'),
-     Input('floor-category-filter-4', 'value')]
+     Input('floor-category-filter-4', 'value'),
+     Input('sold-price-slider', 'value')]
 )
 
-def update_scatter_plot_4(selected_communities, selected_short_address,selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category):
+def update_scatter_plot_4(selected_communities, selected_short_address,selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range):
     filtered_df_4 = filtered_selected_columns_2[filtered_selected_columns_2['Community'].isin(selected_communities) & 
                              filtered_selected_columns_2['Short Address'].isin(selected_short_address) & 
                              filtered_selected_columns_2['Beds'].isin(selected_bedrooms) & 
                              filtered_selected_columns_2['SqFt'].isin(selected_sqft) &
                              filtered_selected_columns_2['Exposure_Category'].isin(selected_exposure) &
-                             filtered_selected_columns_2['Floor_Category'].isin(selected_floor_category)]
+                             filtered_selected_columns_2['Floor_Category'].isin(selected_floor_category)&
+                             (filtered_selected_columns_2['Sold Price'] >= selected_price_range[0]) & 
+                             (filtered_selected_columns_2['Sold Price'] <= selected_price_range[1])]
  
     units_sold = filtered_df_4['Community'].count()
     unit_count_text = f"Total Units Sold: {units_sold}"   
