@@ -156,8 +156,8 @@ grouped_df_1 = filtered_selected_columns.groupby(['Community', 'SqFt_Category','
     units=('Community', 'size')
 ).reset_index()
 
-min_sold_price = grouped_df_1['avg_sold_price'].min()
-max_sold_price = grouped_df_1['avg_sold_price'].max()
+min_sold_price = 300000
+max_sold_price = 6000000
 
 grouped_df_1['avg_sold_price'] = np.ceil(grouped_df_1['avg_sold_price'])
 grouped_df_1['avg_sold_price_per_sqft'] = np.ceil(grouped_df_1['avg_sold_price_per_sqft'])
@@ -198,8 +198,6 @@ exposure_options_4 = [{'label': exposure, 'value': exposure} for exposure in fil
 floor_category_options_4 = [{'label': floor_category, 'value': floor_category} for floor_category in filtered_selected_columns_2['Floor_Category'].unique()]
 short_address_options_4 = [{'label': short_address, 'value': short_address} for short_address in filtered_selected_columns_2['Short Address'].unique()]
 
-
-
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
@@ -207,7 +205,7 @@ app.config.suppress_callback_exceptions = True
 # Define the layout of the web application
 app.layout = html.Div([
     dcc.Tabs(id='tabs', value='tab-1', children=[
-        dcc.Tab(label='2024 YTD Summarized Sold Analysis by Community and Unit Details', value='tab-1', style={'font-size': '12px'}),
+        dcc.Tab(label='2024 YTD Sold Analysis by Community and Unit Details', value='tab-1', style={'font-size': '12px'}),
         dcc.Tab(label='2024 YTD Sold Analysis Summary by Address', value='tab-2', style={'font-size': '12px'}),
         dcc.Tab(label='2024 YTD Sold Analysis by Address and Unit Details', value='tab-4', style={'font-size': '12px'}),
         dcc.Tab(label='Map View', value='tab-3', style={'font-size': '12px'}),
@@ -236,13 +234,10 @@ def render_content(tab):
                             max=max_sold_price,
                             step=50000,
                             value=[min_sold_price, max_sold_price],
-                            # Custom marks for better readability
-                            #marks={i: f'${i//1000}K' for i in range(int(min_sold_price), int(max_sold_price)+1, 200000)},  # Increase interval to reduce clutter
                             marks=None,
                             tooltip={"placement": "bottom", "always_visible": False},   # Tooltip only shows when the slider is being moved
                         ),
                         html.Div(id='slider-output-container', style={'margin-top': '20px', 'font-size': 'large'}),
-                        
                         
                         html.Label('Select Community:', style={'font-size': 'smaller'}),
                         dcc.Dropdown(
@@ -298,9 +293,7 @@ def render_content(tab):
                 ], style={'width': '100%', 'display': 'inline-block'}),
             ])
         ], fluid=True)
-
-
-    
+ 
     elif tab == 'tab-2':
        return dbc.Container([
             html.Div([
@@ -316,8 +309,6 @@ def render_content(tab):
                             max=max_sold_price,
                             step=50000,
                             value=[min_sold_price, max_sold_price],
-                            # Custom marks for better readability
-                            #marks={i: f'${i//1000}K' for i in range(int(min_sold_price), int(max_sold_price)+1, 200000)},  # Increase interval to reduce clutter
                             marks=None,
                             tooltip={"placement": "bottom", "always_visible": False},   # Tooltip only shows when the slider is being moved
                         ),
@@ -399,8 +390,6 @@ def render_content(tab):
                             max=max_sold_price,
                             step=50000,
                             value=[min_sold_price, max_sold_price],
-                            # Custom marks for better readability
-                            #marks={i: f'${i//1000}K' for i in range(int(min_sold_price), int(max_sold_price)+1, 200000)},  # Increase interval to reduce clutter
                             marks=None,
                             tooltip={"placement": "bottom", "always_visible": False},   # Tooltip only shows when the slider is being moved
                         ),
@@ -484,8 +473,6 @@ def render_content(tab):
                                 max=max_sold_price,
                                 step=50000,
                                 value=[min_sold_price, max_sold_price],
-                                # Custom marks for better readability
-                                #marks={i: f'${i//1000}K' for i in range(int(min_sold_price), int(max_sold_price)+1, 200000)},  # Increase interval to reduce clutter
                                 marks=None,
                                 tooltip={"placement": "bottom", "always_visible": False},   # Tooltip only shows when the slider is being moved
                             ),
