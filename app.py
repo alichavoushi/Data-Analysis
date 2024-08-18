@@ -890,14 +890,14 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
 
 def set_short_address_options_4(selected_communities):
     if not selected_communities:
-        filtered_df_4 = filtered_selected_columns_2
+        filtered_df = filtered_selected_columns_2
     else:
-        filtered_df_4 = filtered_selected_columns_2[filtered_selected_columns_2['Community'].isin(selected_communities)]
+        filtered_df = filtered_selected_columns_2[filtered_selected_columns_2['Community'].isin(selected_communities)]
     
-    short_address_options = [{'label': short_address, 'value': short_address} for short_address in filtered_df_4['Short Address'].unique()]
+    short_address_options = [{'label': short_address, 'value': short_address} for short_address in filtered_df['Short Address'].unique()]
 
     
-    return short_address_options_4, [option['value'] for option in short_address_options_4]
+    return short_address_options, [option['value'] for option in short_address_options]
 
 # Callback to update scatter plot based on slicer values for tab-2
 # Define callback to update scatter plot based on slicer values
