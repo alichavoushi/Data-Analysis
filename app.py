@@ -709,13 +709,25 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
                     
                     // Loop through locations to create markers
                     var markers = locations.map((loc) => {
+                        // Calculate total units for this location
+                        var total_units = loc.data.reduce((total, row) => total + row.units, 0);
                         var marker = new google.maps.Marker({
                             position: {lat: loc.lat, lng: loc.lng},
                             map: map,
                             title: loc.shortAddress,
                             icon: {
-                                url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                                scaledSize: new google.maps.Size(32, 32)
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: 10,  // Size of the circle
+                                fillColor: '#FF0000',
+                                fillOpacity: 0.8,
+                                strokeWeight: 2,
+                                strokeColor: '#FFFFFF'
+                            },
+                            label: {
+                            text: total_units.toString(),  // Display the total units as the label
+                            color: "black",  // Text color
+                            fontSize: "16px",  // Text size
+                            fontWeight: "bold"  // Bold text
                             }
                         });
                     
@@ -723,7 +735,6 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
                         var tooltipContent = '<div style="font-size: 10px;">' + 
                                                 `<strong>Address:</strong> ${loc.shortAddress}<br>`+
                                                 `<strong>Total Units:</strong> ${loc.totalUnits}<br><br>`;  // Add total units at the top
-
 
                         loc.data.forEach(row => {
                             tooltipContent += `
