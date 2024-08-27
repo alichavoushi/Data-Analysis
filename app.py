@@ -700,7 +700,8 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
 
     # Construct each location with aggregated data in JavaScript format
     for location, rows in grouped_locations.items():
-        js_code += f"{{lat: {location[0]}, lng: {location[1]}, shortAddress: '{rows[0]['Short Address']}', data: {json.dumps([{'Beds': row['Beds'], 'SqFt_Category': row['SqFt_Category'], 'Exposure_Category': row['Exposure_Category'], 'Floor_Category': row['Floor_Category'],'units': row['units'], 'avgSoldPrice': row['avg_sold_price'], 'Sold_Year': row['Sold Year'], 'Sold_Month': row['Sold Month'],'DOM': row['avg_DOM'], 'Area': row['avg_sqft'], 'avg_sold_price_per_sqft': row['avg_sold_price_per_sqft']} for row in rows])}}},\n"
+        total_units = sum(row['units'] for row in rows)  # Calculate total units for this location
+        js_code += f"{{lat: {location[0]}, lng: {location[1]}, shortAddress: '{rows[0]['Short Address']}', totalUnits: {total_units}, data: {json.dumps([{'Beds': row['Beds'], 'SqFt_Category': row['SqFt_Category'], 'Exposure_Category': row['Exposure_Category'], 'Floor_Category': row['Floor_Category'],'units': row['units'], 'avgSoldPrice': row['avg_sold_price'], 'Sold_Year': row['Sold Year'], 'Sold_Month': row['Sold Month'],'DOM': row['avg_DOM'], 'Area': row['avg_sqft'], 'avg_sold_price_per_sqft': row['avg_sold_price_per_sqft']} for row in rows])}}},\n"
 
     js_code += '''
                     ];
@@ -720,7 +721,8 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
                     
                         // Create content for the tooltip
                         var tooltipContent = '<div style="font-size: 10px;">' + 
-                                                `<strong>Address:</strong> ${loc.shortAddress}<br><br>`;
+                                                `<strong>Address:</strong> ${loc.shortAddress}<br>`+
+                                                `<strong>Total Units:</strong> ${loc.totalUnits}<br><br>`;  // Add total units at the top
 
 
                         loc.data.forEach(row => {
