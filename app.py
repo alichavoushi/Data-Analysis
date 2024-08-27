@@ -239,7 +239,6 @@ def render_content(tab):
                             marks={i: f'{i}' for i in range(1, 13)},  # Labels for months 1 to 12
                             tooltip={"placement": "bottom", "always_visible": True}
                         ),
-                        
                         # Sold Price Slider
                         html.Label('Sold Price Range'),
                         dcc.RangeSlider(
@@ -315,7 +314,16 @@ def render_content(tab):
                 dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
                 dbc.Collapse(
                     dbc.Card(dbc.CardBody([
-                        
+                        html.Label('Select Month:', style={'font-size': 'smaller'}),
+                        dcc.RangeSlider(
+                            id='month-slider',
+                            min=1,
+                            max=12,
+                            step=1,
+                            value=[1, pd.Timestamp.now().month],  # Default to YTD (Jan to current month)
+                            marks={i: f'{i}' for i in range(1, 13)},  # Labels for months 1 to 12
+                            tooltip={"placement": "bottom", "always_visible": True}
+                        ),
                         # Sold Price Slider                      
                         html.Label('Sold Price Range'),
                         dcc.RangeSlider(
@@ -396,6 +404,16 @@ def render_content(tab):
                 dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
                 dbc.Collapse(
                     dbc.Card(dbc.CardBody([
+                        html.Label('Select Month:', style={'font-size': 'smaller'}),
+                        dcc.RangeSlider(
+                            id='month-slider',
+                            min=1,
+                            max=12,
+                            step=1,
+                            value=[1, pd.Timestamp.now().month],  # Default to YTD (Jan to current month)
+                            marks={i: f'{i}' for i in range(1, 13)},  # Labels for months 1 to 12
+                            tooltip={"placement": "bottom", "always_visible": True}
+                        ),
                         # Sold Price Slider
                         html.Label('Sold Price Range'),
                         dcc.RangeSlider(
@@ -481,6 +499,17 @@ def render_content(tab):
                     dbc.Card(dbc.CardBody([
                         html.H3('Google Map'),
                         html.Div([
+                            html.Label('Select Month:', style={'font-size': 'smaller'}),
+                            dcc.RangeSlider(
+                                id='month-slider',
+                                min=1,
+                                max=12,
+                                step=1,
+                                value=[1, pd.Timestamp.now().month],  # Default to YTD (Jan to current month)
+                                marks={i: f'{i}' for i in range(1, 13)},  # Labels for months 1 to 12
+                                tooltip={"placement": "bottom", "always_visible": True}
+                            ),
+                            
                             # Sold Price Slider
                             html.Label('Sold Price Range'),
                             dcc.RangeSlider(
@@ -616,10 +645,12 @@ def set_short_address_options_4(selected_communities):
     Input('sqft-filter-4', 'value'),
     Input('exposure-filter-4', 'value'),
     Input('floor-category-filter-4', 'value'),
-    Input('sold-price-slider', 'value')]
+    Input('sold-price-slider', 'value'),
+    Input('month-slider', 'value')]
 )
-def update_map(communities, addresses, bedrooms, sqft_categories, exposures, floor_categories, selected_price_range):
-    filtered_df_3 = grouped_df_2[
+def update_map(communities, addresses, bedrooms, sqft_categories, exposures, floor_categories, selected_price_range, selected_month_range):
+    current_year = pd.Timestamp.now().year
+    filtered_df_4 = grouped_df_2[
         grouped_df_2['Community'].isin(communities) &
         grouped_df_2['Short Address'].isin(addresses) &
         grouped_df_2['Beds'].isin(bedrooms) &
@@ -630,9 +661,20 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
         (grouped_df_2['avg_sold_price'] <= selected_price_range[1])
     ]
     
+    # Check if selected_month_range is a list or tuple (i.e., a range)
+    if isinstance(selected_month_range, (list, tuple)):
+        # Filter by current year and selected month range
+        filtered_df_4 = filtered_df_4[(filtered_df_4['Sold Year'] == current_year) & 
+                                      (filtered_df_4['Sold Month'] >= selected_month_range[0]) & 
+                                      (filtered_df_4['Sold Month'] <= selected_month_range[1])]
+    else:
+        # Filter by current year and a single month
+        filtered_df_4 = filtered_df_4[(filtered_df_4['Sold Year'] == current_year) & 
+                                      (filtered_df_4['Sold Month'] == selected_month_range)]
+    
     # Group by latitude and longitude to aggregate data for each unique location
     grouped_locations = defaultdict(list)
-    for _, row in filtered_df_3.iterrows():
+    for _, row in filtered_df_4.iterrows():
         key = (row['Latitude'], row['Longitude'])
         grouped_locations[key].append(row)
 
@@ -658,7 +700,7 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
 
     # Construct each location with aggregated data in JavaScript format
     for location, rows in grouped_locations.items():
-        js_code += f"{{lat: {location[0]}, lng: {location[1]}, shortAddress: '{rows[0]['Short Address']}', data: {json.dumps([{'Beds': row['Beds'], 'SqFt_Category': row['SqFt_Category'], 'Exposure_Category': row['Exposure_Category'], 'Floor_Category': row['Floor_Category'],'units': row['units'], 'avgSoldPrice': row['avg_sold_price'], 'DOM': row['avg_DOM'], 'Area': row['avg_sqft'], 'avg_sold_price_per_sqft': row['avg_sold_price_per_sqft']} for row in rows])}}},\n"
+        js_code += f"{{lat: {location[0]}, lng: {location[1]}, shortAddress: '{rows[0]['Short Address']}', data: {json.dumps([{'Beds': row['Beds'], 'SqFt_Category': row['SqFt_Category'], 'Exposure_Category': row['Exposure_Category'], 'Floor_Category': row['Floor_Category'],'units': row['units'], 'avgSoldPrice': row['avg_sold_price'], 'Sold_Year': row['Sold Year'], 'Sold_Month': row['Sold Month'],'DOM': row['avg_DOM'], 'Area': row['avg_sqft'], 'avg_sold_price_per_sqft': row['avg_sold_price_per_sqft']} for row in rows])}}},\n"
 
     js_code += '''
                     ];
@@ -690,6 +732,8 @@ def update_map(communities, addresses, bedrooms, sqft_categories, exposures, flo
                                 <strong>Floor Level:</strong> ${row.Floor_Category}<br>
                                 <strong>Units:</strong> ${row.units}<br>
                                 <strong>Sold Price:</strong> $${row.avgSoldPrice.toLocaleString()}<br>
+                                <strong>Sold Year:</strong> ${row.Sold_Year}<br>
+                                <strong>Sold Month:</strong> ${row.Sold_Month}<br>
                                 <strong>DOM:</strong> ${row.DOM}<br>
                                 <strong>sold_price_per_sqft:</strong> ${row.avg_sold_price_per_sqft}<br><br>
                             `;
@@ -762,9 +806,12 @@ def update_slider_output(value, tab):
      Input('sqft-filter-1', 'value'),
      Input('exposure-filter-1', 'value'),
      Input('floor-category-filter-1', 'value'),
-     Input('sold-price-slider', 'value')]
+     Input('sold-price-slider', 'value'),
+     Input('month-slider', 'value')]
 )
-def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range):
+
+def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range, selected_month_range):
+    current_year = pd.Timestamp.now().year
     filtered_df_1 = grouped_df_1[grouped_df_1['Community'].isin(selected_communities) & 
                              grouped_df_1['Beds'].isin(selected_bedrooms) & 
                              grouped_df_1['SqFt_Category'].isin(selected_sqft) &
@@ -773,9 +820,17 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
                             (grouped_df_1['avg_sold_price'] >= selected_price_range[0]) &  # Filter based on selected price range
                             (grouped_df_1['avg_sold_price'] <= selected_price_range[1])]     # Filter based on selected price range
                             
-    
-    
-    
+    # Check if selected_month_range is a list or tuple (i.e., a range)
+    if isinstance(selected_month_range, (list, tuple)):
+        # Filter by current year and selected month range
+        filtered_df_1 = filtered_df_1[(filtered_df_1['Sold Year'] == current_year) & 
+                                      (filtered_df_1['Sold Month'] >= selected_month_range[0]) & 
+                                      (filtered_df_1['Sold Month'] <= selected_month_range[1])]
+    else:
+        # Filter by current year and a single month
+        filtered_df_1 = filtered_df_1[(filtered_df_1['Sold Year'] == current_year) & 
+                                      (filtered_df_1['Sold Month'] == selected_month_range)]
+      
     units_sold = filtered_df_1['units'].sum()
     unit_count_text = f"Total Units Sold: {units_sold}"
         
@@ -786,7 +841,7 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
     
     fig = px.scatter(filtered_df_1, x='SqFt_Category', y='avg_sold_price', color='Community',
                      size='units',# hover_name='Community',
-                     hover_data=['Beds','Floor_Category','Exposure_Category','units','avg_DOM','avg_sqft','avg_sold_price_per_sqft'],
+                     hover_data=['Sold Year','Sold Month','Beds','Floor_Category','Exposure_Category','units','avg_DOM','avg_sqft','avg_sold_price_per_sqft'],
                      labels={'SqFt_Category': 'Square Feet', 'Sold Price': 'Average Sold Price'},
                      title='Average Sold Price by Square Feet and Community')
 
@@ -847,10 +902,12 @@ def set_short_address_options_2(selected_communities):
      Input('sqft-filter-2', 'value'),
      Input('exposure-filter-2', 'value'),
      Input('floor-category-filter-2', 'value'),
-     Input('sold-price-slider', 'value')]
+     Input('sold-price-slider', 'value'),
+     Input('month-slider', 'value')]
 )
 
-def update_scatter_plot_2(selected_communities, selected_short_address,selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range):
+def update_scatter_plot_2(selected_communities, selected_short_address,selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range,selected_month_range):
+    current_year = pd.Timestamp.now().year
     filtered_df_2 = grouped_df_2[grouped_df_2['Community'].isin(selected_communities) & 
                              grouped_df_2['Short Address'].isin(selected_short_address) & 
                              grouped_df_2['Beds'].isin(selected_bedrooms) & 
@@ -860,12 +917,22 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
                             (grouped_df_2['avg_sold_price'] >= selected_price_range[0]) &  # Filter based on selected price range
                             (grouped_df_2['avg_sold_price'] <= selected_price_range[1])]     # Filter based on selected price range]
  
+    # Check if selected_month_range is a list or tuple (i.e., a range)
+    if isinstance(selected_month_range, (list, tuple)):
+        # Filter by current year and selected month range
+        filtered_df_2 = filtered_df_2[(filtered_df_2['Sold Year'] == current_year) & 
+                                      (filtered_df_2['Sold Month'] >= selected_month_range[0]) & 
+                                      (filtered_df_2['Sold Month'] <= selected_month_range[1])]
+    else:
+        # Filter by current year and a single month
+        filtered_df_2 = filtered_df_2[(filtered_df_2['Sold Year'] == current_year) & 
+                                      (filtered_df_2['Sold Month'] == selected_month_range)]
     units_sold = filtered_df_2['units'].sum()
     unit_count_text = f"Total Units Sold: {units_sold}"   
     
     fig = px.scatter(filtered_df_2, x='Short Address', y='avg_sold_price', color='Short Address',
                      size='units',# hover_name='Community',
-                     hover_data=['SqFt_Category','Beds','Floor_Category','Exposure_Category','units','avg_DOM','avg_sqft','avg_sold_price_per_sqft'],
+                     hover_data=['Sold Year','Sold Month','SqFt_Category','Beds','Floor_Category','Exposure_Category','units','avg_DOM','avg_sqft','avg_sold_price_per_sqft'],
                      labels={'Short Address': 'Address', 'Sold Price': 'Average Sold Price'},
                      title='Average Sold Price by Address')
 
@@ -927,10 +994,12 @@ def set_short_address_options_3(selected_communities):
      Input('sqft-filter-3', 'value'),
      Input('exposure-filter-3', 'value'),
      Input('floor-category-filter-3', 'value'),
-     Input('sold-price-slider', 'value')]
+     Input('sold-price-slider', 'value'),
+     Input('month-slider', 'value')]
 )
 
-def update_scatter_plot_3(selected_communities, selected_short_address,selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range):
+def update_scatter_plot_3(selected_communities, selected_short_address,selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range, selected_month_range):
+    current_year = pd.Timestamp.now().year
     filtered_df_4 = filtered_selected_columns_2[filtered_selected_columns_2['Community'].isin(selected_communities) & 
                              filtered_selected_columns_2['Short Address'].isin(selected_short_address) & 
                              filtered_selected_columns_2['Beds'].isin(selected_bedrooms) & 
@@ -940,12 +1009,22 @@ def update_scatter_plot_3(selected_communities, selected_short_address,selected_
                              (filtered_selected_columns_2['Sold Price'] >= selected_price_range[0]) & 
                              (filtered_selected_columns_2['Sold Price'] <= selected_price_range[1])]
  
+    # Check if selected_month_range is a list or tuple (i.e., a range)
+    if isinstance(selected_month_range, (list, tuple)):
+        # Filter by current year and selected month range
+        filtered_df_4 = filtered_df_4[(filtered_df_4['Sold Year'] == current_year) & 
+                                      (filtered_df_4['Sold Month'] >= selected_month_range[0]) & 
+                                      (filtered_df_4['Sold Month'] <= selected_month_range[1])]
+    else:
+        # Filter by current year and a single month
+        filtered_df_4 = filtered_df_4[(filtered_df_4['Sold Year'] == current_year) & 
+                                      (filtered_df_4['Sold Month'] == selected_month_range)]
     units_sold = filtered_df_4['Community'].count()
     unit_count_text = f"Total Units Sold: {units_sold}"   
     
     fig = px.scatter(filtered_df_4, x='Short Address', y='Sold Price', color='Short Address',
                      size='DOM',# hover_name='Community',
-                     hover_data=['SqFt','Beds','Floor_Category','Exposure_Category','DOM','Area','Price per SqFt'],
+                     hover_data=['Sold Year','Sold Month','SqFt','Beds','Floor_Category','Exposure_Category','DOM','Area','Price per SqFt'],
                      labels={'Short Address': 'Address', 'Sold Price': 'Sold Price'},
                      title='Sold Price by Address')
 
