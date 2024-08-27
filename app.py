@@ -39,7 +39,9 @@ df1.fillna({'Street #': '', 'Street Name': ''}, inplace=True)
 df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(str)
 df1['Sold Price'] = df1['Sold Price'].replace('[\$,]', '', regex=True).astype(float)
 df1['Short Address']=df1['Street #'].astype(str)+" "+df1['Street Name'].astype(str)#+" st, Toronto, ON, Canada"
-
+df1['Sold Date'] = pd.to_datetime(df1['Sold Date'])
+df1['Sold Year'] = pd.to_datetime(df1['Sold Date'], errors='coerce').dt.year
+df1['Sold Month'] = pd.to_datetime(df1['Sold Date'], errors='coerce').dt.month
 df1['Area'] = df1['Area'].replace('[\D]', '', regex=True).astype(float)
 
  # Calculate price per square foot only for rows with valid 'Area'
@@ -130,16 +132,17 @@ df1['Exposure_Category'] = df1['Exposure'].apply(map_exposure_to_category)
 
 condition = (df1['Status'] == 'Sold') & (df1['Municipality District'] == 'Toronto C01')
 
-filtered_selected_columns = df1[condition][['Community', 'Short Address','Beds', 'SqFt_Category', 'Sold Price','DOM','Exposure_Category','Floor_Category','Latitude','Longitude','Area','Price per SqFt']]
+filtered_selected_columns = df1[condition][['Community', 'Short Address','Beds', 'SqFt_Category', 'Sold Price','Sold Date','Sold Year','Sold Month','DOM','Exposure_Category','Floor_Category','Latitude','Longitude','Area','Price per SqFt']]
 
 # Convert 'Sold Price' column to numeric
 filtered_selected_columns['Sold Price'] = pd.to_numeric(filtered_selected_columns['Sold Price'], errors='coerce')
 filtered_selected_columns['DOM'] = pd.to_numeric(filtered_selected_columns['DOM'], errors='coerce')
 filtered_selected_columns['Price per SqFt'] = pd.to_numeric(filtered_selected_columns['Price per SqFt'], errors='coerce')
+filtered_selected_columns['Price per SqFt'] = np.ceil(filtered_selected_columns['Price per SqFt'])
 filtered_selected_columns['Area'] = pd.to_numeric(filtered_selected_columns['Area'], errors='coerce')
 filtered_selected_columns['Community'] = filtered_selected_columns['Community'].astype(str)
 
-filtered_selected_columns_2 = df1[condition][['Community', 'Short Address','Beds', 'SqFt', 'Sold Price','DOM','Exposure_Category','Floor_Category','Latitude','Longitude','Area','Price per SqFt']]
+filtered_selected_columns_2 = df1[condition][['Community', 'Short Address','Beds', 'SqFt', 'Sold Price','Sold Date','Sold Year','Sold Month','DOM','Exposure_Category','Floor_Category','Latitude','Longitude','Area','Price per SqFt']]
 filtered_selected_columns_2['Sold Price'] = pd.to_numeric(filtered_selected_columns_2['Sold Price'], errors='coerce')
 filtered_selected_columns_2['DOM'] = pd.to_numeric(filtered_selected_columns_2['DOM'], errors='coerce')
 filtered_selected_columns_2['Price per SqFt'] = pd.to_numeric(filtered_selected_columns_2['Price per SqFt'], errors='coerce')
@@ -148,7 +151,7 @@ filtered_selected_columns_2['Area'] = pd.to_numeric(filtered_selected_columns_2[
 filtered_selected_columns_2['Community'] = filtered_selected_columns_2['Community'].astype(str)
 filtered_selected_columns_2['SqFt'] = filtered_selected_columns_2['SqFt'].astype(str)
 
-grouped_df_1 = filtered_selected_columns.groupby(['Community', 'SqFt_Category','Beds', 'Floor_Category','Exposure_Category']).agg(
+grouped_df_1 = filtered_selected_columns.groupby(['Community', 'SqFt_Category','Beds', 'Floor_Category','Exposure_Category','Sold Year','Sold Month']).agg(
     avg_sold_price=('Sold Price', 'mean'),
     avg_sold_price_per_sqft=('Price per SqFt', 'mean'),
     avg_sqft=('Area', 'mean'),
@@ -159,11 +162,12 @@ grouped_df_1 = filtered_selected_columns.groupby(['Community', 'SqFt_Category','
 min_sold_price = 300000
 max_sold_price = 6000000
 
+
 grouped_df_1['avg_sold_price'] = np.ceil(grouped_df_1['avg_sold_price'])
 grouped_df_1['avg_sold_price_per_sqft'] = np.ceil(grouped_df_1['avg_sold_price_per_sqft'])
 grouped_df_1['avg_DOM'] = np.ceil(grouped_df_1['avg_DOM'])
 
-grouped_df_2 = filtered_selected_columns.groupby(['Community', 'Short Address','SqFt_Category','Beds','Floor_Category','Exposure_Category','Latitude','Longitude']).agg(
+grouped_df_2 = filtered_selected_columns.groupby(['Community', 'Short Address','SqFt_Category','Beds','Floor_Category','Exposure_Category','Sold Year','Sold Month','Latitude','Longitude']).agg(
     avg_sold_price=('Sold Price', 'mean'),
     avg_sold_price_per_sqft=('Price per SqFt', 'mean'),
     avg_sqft=('Area', 'mean'),
@@ -191,12 +195,12 @@ floor_category_options_2 = [{'label': floor_category, 'value': floor_category} f
 short_address_options_2 = [{'label': short_address, 'value': short_address} for short_address in grouped_df_2['Short Address'].unique()]
 
 # Define slicers (dropdowns) for filtering data tab-4
-community_options_4 = [{'label': community, 'value': community} for community in filtered_selected_columns_2['Community'].unique()]
-bedroom_options_4 = [{'label': str(bedroom), 'value': bedroom} for bedroom in filtered_selected_columns_2['Beds'].unique()]
-sqft_options_4 = [{'label': sqft, 'value': sqft} for sqft in filtered_selected_columns_2['SqFt'].unique()]
-exposure_options_4 = [{'label': exposure, 'value': exposure} for exposure in filtered_selected_columns_2['Exposure_Category'].unique()]
-floor_category_options_4 = [{'label': floor_category, 'value': floor_category} for floor_category in filtered_selected_columns_2['Floor_Category'].unique()]
-short_address_options_4 = [{'label': short_address, 'value': short_address} for short_address in filtered_selected_columns_2['Short Address'].unique()]
+community_options_3 = [{'label': community, 'value': community} for community in filtered_selected_columns_2['Community'].unique()]
+bedroom_options_3 = [{'label': str(bedroom), 'value': bedroom} for bedroom in filtered_selected_columns_2['Beds'].unique()]
+sqft_options_3 = [{'label': sqft, 'value': sqft} for sqft in filtered_selected_columns_2['SqFt'].unique()]
+exposure_options_3 = [{'label': exposure, 'value': exposure} for exposure in filtered_selected_columns_2['Exposure_Category'].unique()]
+floor_category_options_3 = [{'label': floor_category, 'value': floor_category} for floor_category in filtered_selected_columns_2['Floor_Category'].unique()]
+short_address_options_3 = [{'label': short_address, 'value': short_address} for short_address in filtered_selected_columns_2['Short Address'].unique()]
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
@@ -205,10 +209,10 @@ app.config.suppress_callback_exceptions = True
 # Define the layout of the web application
 app.layout = html.Div([
     dcc.Tabs(id='tabs', value='tab-1', children=[
-        dcc.Tab(label='2024 YTD Sold Analysis by Community and Unit Details', value='tab-1', style={'font-size': '12px'}),
-        dcc.Tab(label='2024 YTD Sold Analysis Summary by Address', value='tab-2', style={'font-size': '12px'}),
-        dcc.Tab(label='2024 YTD Sold Analysis by Address and Unit Details', value='tab-4', style={'font-size': '12px'}),
-        dcc.Tab(label='Map View', value='tab-3', style={'font-size': '12px'}),
+        dcc.Tab(label='2024 YTD Sold Community Summary', value='tab-1', style={'font-size': '12px'}),
+        dcc.Tab(label='2024 YTD Sold Analysis by Address-grouped', value='tab-2', style={'font-size': '12px'}),
+        dcc.Tab(label='2024 YTD Sold Analysis by Address- Units', value='tab-3', style={'font-size': '12px'}),
+        dcc.Tab(label='Map View', value='tab-4', style={'font-size': '12px'}),
     ]),
     html.Div(id='tabs-content')
 ])
@@ -225,12 +229,22 @@ def render_content(tab):
                 dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
                 dbc.Collapse(
                     dbc.Card(dbc.CardBody([
+                        html.Label('Select Month:', style={'font-size': 'smaller'}),
+                        dcc.RangeSlider(
+                            id='month-slider',
+                            min=1,
+                            max=12,
+                            step=1,
+                            value=[1, pd.Timestamp.now().month],  # Default to YTD (Jan to current month)
+                            marks={i: f'{i}' for i in range(1, 13)},  # Labels for months 1 to 12
+                            tooltip={"placement": "bottom", "always_visible": True}
+                        ),
+                        
                         # Sold Price Slider
                         html.Label('Sold Price Range'),
                         dcc.RangeSlider(
                             id='sold-price-slider',
-                            #min=min_sold_price,
-                            min=300000,
+                            min=min_sold_price,
                             max=max_sold_price,
                             step=50000,
                             value=[min_sold_price, max_sold_price],
@@ -238,6 +252,7 @@ def render_content(tab):
                             tooltip={"placement": "bottom", "always_visible": False},   # Tooltip only shows when the slider is being moved
                         ),
                         html.Div(id='slider-output-container', style={'margin-top': '20px', 'font-size': 'large'}),
+                        
                         
                         html.Label('Select Community:', style={'font-size': 'smaller'}),
                         dcc.Dropdown(
@@ -293,19 +308,19 @@ def render_content(tab):
                 ], style={'width': '100%', 'display': 'inline-block'}),
             ])
         ], fluid=True)
- 
+  
     elif tab == 'tab-2':
        return dbc.Container([
             html.Div([
                 dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
                 dbc.Collapse(
                     dbc.Card(dbc.CardBody([
-                        # Sold Price Slider
+                        
+                        # Sold Price Slider                      
                         html.Label('Sold Price Range'),
                         dcc.RangeSlider(
                             id='sold-price-slider',
-                            #min=min_sold_price,
-                            min=300000,
+                            min=min_sold_price,
                             max=max_sold_price,
                             step=50000,
                             value=[min_sold_price, max_sold_price],
@@ -375,7 +390,7 @@ def render_content(tab):
                 ], style={'width': '100%', 'display': 'inline-block'}),
             ])
         ], fluid=True)
-    elif tab == 'tab-4':
+    elif tab == 'tab-3':
        return dbc.Container([
             html.Div([
                 dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
@@ -390,6 +405,8 @@ def render_content(tab):
                             max=max_sold_price,
                             step=50000,
                             value=[min_sold_price, max_sold_price],
+                            # Custom marks for better readability
+                            #marks={i: f'${i//1000}K' for i in range(int(min_sold_price), int(max_sold_price)+1, 200000)},  # Increase interval to reduce clutter
                             marks=None,
                             tooltip={"placement": "bottom", "always_visible": False},   # Tooltip only shows when the slider is being moved
                         ),
@@ -397,49 +414,49 @@ def render_content(tab):
                         
                         html.Label('Select Community:', style={'font-size': 'smaller'}),
                         dcc.Dropdown(
-                            id='community-filter-4',
-                            options=community_options_4,
+                            id='community-filter-3',
+                            options=community_options_3,
                             value=['University'],
                             multi=True,
                             style={'font-size': 'smaller', 'width': '100%'}
                         ),
                         html.Label('Select Address:', style={'font-size': 'smaller'}),
                         dcc.Dropdown(
-                            id='short-address-filter-4',
-                            options=short_address_options_4,
-                            value=[option['value'] for option in short_address_options_4],
+                            id='short-address-filter-3',
+                            options=short_address_options_3,
+                            value=[option['value'] for option in short_address_options_3],
                             multi=True,
                             style={'font-size': 'smaller', 'width': '100%'}
                         ),
                         html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
                         dcc.Dropdown(
-                            id='bedroom-filter-4',
-                            options=bedroom_options_4,
-                            value=[option['value'] for option in bedroom_options_4],
+                            id='bedroom-filter-3',
+                            options=bedroom_options_3,
+                            value=[option['value'] for option in bedroom_options_3],
                             multi=True,
                             style={'font-size': 'smaller', 'width': '100%'}
                         ),
                         html.Label('Select SqFt:', style={'font-size': 'smaller'}),
                         dcc.Dropdown(
-                            id='sqft-filter-4',
-                            options=sqft_options_4,
-                            value=[option['value'] for option in sqft_options_4],
+                            id='sqft-filter-3',
+                            options=sqft_options_3,
+                            value=[option['value'] for option in sqft_options_3],
                             multi=True,
                             style={'font-size': 'smaller', 'width': '100%'}
                         ),
                         html.Label('Select Exposure:', style={'font-size': 'smaller'}),
                         dcc.Dropdown(
-                            id='exposure-filter-4',
-                            options=exposure_options_4,
-                            value=[option['value'] for option in exposure_options_4],
+                            id='exposure-filter-3',
+                            options=exposure_options_3,
+                            value=[option['value'] for option in exposure_options_3],
                             multi=True,
                             style={'font-size': 'smaller', 'width': '100%'}
                         ),
                         html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
                         dcc.Dropdown(
-                            id='floor-category-filter-4',
-                            options=floor_category_options_4,
-                            value=[option['value'] for option in floor_category_options_4],
+                            id='floor-category-filter-3',
+                            options=floor_category_options_3,
+                            value=[option['value'] for option in floor_category_options_3],
                             multi=True,
                             style={'font-size': 'smaller', 'width': '100%'}
                         ),
@@ -451,12 +468,12 @@ def render_content(tab):
             ]),
             html.Div([
                 html.Div([
-                    dcc.Graph(id='scatter-plot-4', style={'height': '80vh'}),
-                    html.Div(id='unit-count-4', style={'font-size': 'larger', 'font-weight': 'bold', 'margin-top': '20px'}),
+                    dcc.Graph(id='scatter-plot-3', style={'height': '80vh'}),
+                    html.Div(id='unit-count-3', style={'font-size': 'larger', 'font-weight': 'bold', 'margin-top': '20px'}),
                 ], style={'width': '100%', 'display': 'inline-block'}),
             ])
         ], fluid=True)
-    elif tab == 'tab-3':
+    elif tab == 'tab-4':
         return dbc.Container([
             html.Div([
                 dbc.Button("Filter Options", id="collapse-button", className="mb-3", n_clicks=0),
@@ -480,7 +497,7 @@ def render_content(tab):
                             
                             html.Label('Select Community:', style={'font-size': 'smaller'}),
                             dcc.Dropdown(
-                                id='community-filter-3',
+                                id='community-filter-4',
                                 options=community_options_2,
                                 value=['University'],
                                 multi=True,
@@ -488,7 +505,7 @@ def render_content(tab):
                             ),
                             html.Label('Select Address:', style={'font-size': 'smaller'}),
                             dcc.Dropdown(
-                                id='short-address-filter-3',
+                                id='short-address-filter-4',
                                 options=short_address_options_2,
                                 value=[option['value'] for option in short_address_options_2],
                                 multi=True,
@@ -496,7 +513,7 @@ def render_content(tab):
                             ),
                             html.Label('Select Bedrooms:', style={'font-size': 'smaller'}),
                             dcc.Dropdown(
-                                id='bedroom-filter-3',
+                                id='bedroom-filter-4',
                                 options=bedroom_options_2,
                                 value=[option['value'] for option in bedroom_options_2],
                                 multi=True,
@@ -504,7 +521,7 @@ def render_content(tab):
                             ),
                             html.Label('Select SqFt:', style={'font-size': 'smaller'}),
                             dcc.Dropdown(
-                                id='sqft-filter-3',
+                                id='sqft-filter-4',
                                 options=sqft_options_2,
                                 value=[option['value'] for option in sqft_options_2],
                                 multi=True,
@@ -512,7 +529,7 @@ def render_content(tab):
                             ),
                             html.Label('Select Exposure:', style={'font-size': 'smaller'}),
                             dcc.Dropdown(
-                                id='exposure-filter-3',
+                                id='exposure-filter-4',
                                 options=exposure_options_2,
                                 value=[option['value'] for option in exposure_options_2],
                                 multi=True,
@@ -520,7 +537,7 @@ def render_content(tab):
                             ),
                             html.Label('Select Floor Category:', style={'font-size': 'smaller'}),
                             dcc.Dropdown(
-                                id='floor-category-filter-3',
+                                id='floor-category-filter-4',
                                 options=floor_category_options_2,
                                 value=[option['value'] for option in floor_category_options_2],
                                 multi=True,
@@ -574,12 +591,12 @@ def render_content(tab):
 
 
 @app.callback(
-    [Output('short-address-filter-3', 'options'),
-    Output('short-address-filter-3', 'value')],
-    Input('community-filter-3', 'value')
+    [Output('short-address-filter-4', 'options'),
+    Output('short-address-filter-4', 'value')],
+    Input('community-filter-4', 'value')
 )
 
-def set_short_address_options_3(selected_communities):
+def set_short_address_options_4(selected_communities):
     if not selected_communities:
         filtered_df = grouped_df_2
     else:
@@ -593,12 +610,12 @@ def set_short_address_options_3(selected_communities):
 
 @app.callback(
     Output('map-frame', 'srcDoc'),
-    [Input('community-filter-3', 'value'),
-    Input('short-address-filter-3', 'value'),
-    Input('bedroom-filter-3', 'value'),
-    Input('sqft-filter-3', 'value'),
-    Input('exposure-filter-3', 'value'),
-    Input('floor-category-filter-3', 'value'),
+    [Input('community-filter-4', 'value'),
+    Input('short-address-filter-4', 'value'),
+    Input('bedroom-filter-4', 'value'),
+    Input('sqft-filter-4', 'value'),
+    Input('exposure-filter-4', 'value'),
+    Input('floor-category-filter-4', 'value'),
     Input('sold-price-slider', 'value')]
 )
 def update_map(communities, addresses, bedrooms, sqft_categories, exposures, floor_categories, selected_price_range):
@@ -808,7 +825,7 @@ def update_scatter_plot_1(selected_communities, selected_bedrooms, selected_sqft
     Output('short-address-filter-2', 'value'),
     Input('community-filter-2', 'value')
 )
-def set_short_address_options(selected_communities):
+def set_short_address_options_2(selected_communities):
     if not selected_communities:
         filtered_df = grouped_df_2
     else:
@@ -883,12 +900,12 @@ def update_scatter_plot_2(selected_communities, selected_short_address,selected_
 
 
 @app.callback(
-    Output('short-address-filter-4', 'options'),
-    Output('short-address-filter-4', 'value'),
-    Input('community-filter-4', 'value')
+    Output('short-address-filter-3', 'options'),
+    Output('short-address-filter-3', 'value'),
+    Input('community-filter-3', 'value')
 )
 
-def set_short_address_options_4(selected_communities):
+def set_short_address_options_3(selected_communities):
     if not selected_communities:
         filtered_df = filtered_selected_columns_2
     else:
@@ -902,18 +919,18 @@ def set_short_address_options_4(selected_communities):
 # Callback to update scatter plot based on slicer values for tab-2
 # Define callback to update scatter plot based on slicer values
 @app.callback(
-    [Output('scatter-plot-4', 'figure'),
-    Output('unit-count-4', 'children')],
-    [Input('community-filter-4', 'value'),
-     Input('short-address-filter-4', 'value'),
-     Input('bedroom-filter-4', 'value'),
-     Input('sqft-filter-4', 'value'),
-     Input('exposure-filter-4', 'value'),
-     Input('floor-category-filter-4', 'value'),
+    [Output('scatter-plot-3', 'figure'),
+    Output('unit-count-3', 'children')],
+    [Input('community-filter-3', 'value'),
+     Input('short-address-filter-3', 'value'),
+     Input('bedroom-filter-3', 'value'),
+     Input('sqft-filter-3', 'value'),
+     Input('exposure-filter-3', 'value'),
+     Input('floor-category-filter-3', 'value'),
      Input('sold-price-slider', 'value')]
 )
 
-def update_scatter_plot_4(selected_communities, selected_short_address,selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range):
+def update_scatter_plot_3(selected_communities, selected_short_address,selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range):
     filtered_df_4 = filtered_selected_columns_2[filtered_selected_columns_2['Community'].isin(selected_communities) & 
                              filtered_selected_columns_2['Short Address'].isin(selected_short_address) & 
                              filtered_selected_columns_2['Beds'].isin(selected_bedrooms) & 
