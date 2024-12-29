@@ -17,7 +17,7 @@ import os
 
 #google_api_key = os.getenv('GOOGLE_API_KEY')
 
-url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_reyhan.csv"
+url="https://raw.githubusercontent.com/alichavoushi/Data-Analysis/main/Trreb%20Analysis%20Toronto_C_reyhan.csv?token=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"
 #url="https://github.com/alichavoushi/Data-Analysis/blob/f4ea0a2a99624b620d98ac0e76000b412c52d62f/Trreb%20Analysis%20Toronto_C_reyhan.csv"
 #df = pd.read_csv(r'C:\TRREB ANALYSIS\Trreb Analysis Toronto_C_reyhan.csv', encoding='ISO-8859-1')
 df = pd.read_csv(url, index_col=0, encoding='ISO-8859-1')
