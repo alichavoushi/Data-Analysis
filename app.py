@@ -417,6 +417,23 @@ def render_content(tab):
                             multi=True,
                             style={'font-size': 'smaller', 'width': '100%'}
                         ),
+                        html.Label('Select X-Axis:', style={'font-size': 'smaller'}),
+                            dcc.Dropdown(
+                                id='xaxis-filter',
+                                options=[
+                                    {'label': 'Square Feet Category', 'value': 'SqFt_Category'},
+                                    {'label': 'Exposure Category', 'value': 'Exposure_Category'},
+                                    {'label': 'Parking Category', 'value': 'Parking_Category'},
+                                    {'label': 'Bedroom Category', 'value': 'Beds'},
+                                    {'label': 'Floor Category', 'value': 'Floor_Category'},
+                                    {'label': 'Sold Month', 'value': 'Sold Month'},
+                                    {'label': 'Community', 'value': 'Community'},
+                                    # Add other fields you want to allow users to choose from
+                                ],
+                                value='SqFt_Category',  # Default to 'SqFt_Category'
+                                style={'font-size': 'smaller', 'width': '100%'}
+                            ),
+
                         
                     ])),
                     id="collapse",
@@ -1296,10 +1313,11 @@ def update_slider_output(value, tab):
      Input('exposure-filter-1', 'value'),
      Input('floor-category-filter-1', 'value'),
      Input('sold-price-slider', 'value'),
-     Input('month-slider', 'value')]
+     Input('month-slider', 'value'),
+     Input('xaxis-filter', 'value')]
 )
 
-def update_scatter_plot_1(selected_municipality,selected_communities, selected_parking, selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range, selected_month_range):
+def update_scatter_plot_1(selected_municipality,selected_communities, selected_parking, selected_bedrooms, selected_sqft, selected_exposure, selected_floor_category, selected_price_range, selected_month_range,selected_xaxis):
     current_year = pd.Timestamp.now().year
     filtered_df_1 = grouped_df_1[grouped_df_1['Municipality District'].isin(selected_municipality) & 
                              grouped_df_1['Community'].isin(selected_communities) & 
@@ -1322,21 +1340,67 @@ def update_scatter_plot_1(selected_municipality,selected_communities, selected_p
         filtered_df_1 = filtered_df_1[(filtered_df_1['Sold Year'] == current_year) & 
                                       (filtered_df_1['Sold Month'] == selected_month_range)]
     
+    # Dynamically calculate units for the selected x-axis
+    if selected_xaxis == 'SqFt_Category':
+        units_by_category = filtered_df_1.groupby('SqFt_Category')['units'].sum().reset_index()
+    elif selected_xaxis == 'Community':
+        units_by_category = filtered_df_1.groupby('Community')['units'].sum().reset_index()
+    elif selected_xaxis == 'Beds':
+        units_by_category = filtered_df_1.groupby('Beds')['units'].sum().reset_index()
+    elif selected_xaxis == 'Parking_Category':
+        units_by_category = filtered_df_1.groupby('Parking_Category')['units'].sum().reset_index()
+    elif selected_xaxis == 'Floor_Category':
+        units_by_category = filtered_df_1.groupby('Floor_Category')['units'].sum().reset_index()
+    elif selected_xaxis == 'Exposure_Category':
+        units_by_category = filtered_df_1.groupby('Exposure_Category')['units'].sum().reset_index()
+    elif selected_xaxis == 'Sold Month':
+        # Ensure 'Sold Month' is treated as a string or categorical value for proper grouping
+        #units_by_category = filtered_df_1.groupby('Sold Month')['units'].sum().reset_index()
+        units_by_category = filtered_df_1.groupby('Sold Month')['units'].sum().reset_index()
+        units_by_category['Sold Month'] = units_by_category['Sold Month'].astype(str)  # Convert to string for consistency
+        
     
     units_sold = filtered_df_1['units'].sum()
     unit_count_text = f"Total Units Sold: {units_sold}"
-        
-    custom_order = ['<700', '700-899', '900-1199', '1200+','Unknown']
-        
-        # Sort the unique values of the 'SqFt_Category' column based on the custom order
-    sorted_x_values = sorted(filtered_df_1['SqFt_Category'].unique(), key=lambda x: custom_order.index(x))
     
-    fig = px.scatter(filtered_df_1, x='SqFt_Category', y='avg_sold_price', color='Community',
+    custom_order = ['<700', '700-899', '900-1199', '1200+','Unknown']
+    
+    filtered_df_1[selected_xaxis] = filtered_df_1[selected_xaxis].apply(str)
+    
+    # Sort based on custom order if the selected_xaxis is 'SqFt_Category'
+    if selected_xaxis == 'SqFt_Category':
+        sorted_x_values = sorted(filtered_df_1[selected_xaxis].unique(), key=lambda x: custom_order.index(x))
+    else:
+        # Default sorting for other categories
+        sorted_x_values = sorted(filtered_df_1[selected_xaxis].unique(), key=lambda x: (str(x)))
+
+    fig = px.scatter(filtered_df_1,x=selected_xaxis, y='avg_sold_price', color='Community',
                      size='units',# hover_name='Community',
                      hover_data=['Municipality District','Sold Year','Sold Month','Parking_Category','Beds','Floor_Category','Exposure_Category','units','avg_DOM','avg_sqft','avg_sold_price_per_sqft'],
-                     labels={'SqFt_Category': 'Square Feet', 'Sold Price': 'Average Sold Price'},
-                     title='Average Sold Price by Square Feet and Community')
+                     labels={selected_xaxis: selected_xaxis.replace('_', ' ').title(), 'Sold Price': 'Average Sold Price'},
+                     #title='Average Sold Price by Square Feet and Community')
+                     title='Average Sold Price by ' + selected_xaxis.replace('_', ' ').title() + ' and Community')
 
+    # Add custom annotations for total units at the bottom of each x-axis value
+    annotations = []
+    # Mapping the x-axis sorted values to ensure correct annotation positions
+    x_value_to_position = {value: idx for idx, value in enumerate(sorted_x_values)}
+    
+    for i, row in units_by_category.iterrows():
+        # Get the corresponding x-axis position for each category
+        x_position = x_value_to_position.get(row[selected_xaxis], None)
+        if x_position is not None:
+            annotations.append(dict(
+                x=x_position,  # Use position based on sorted order
+                y=-0.075,  # Place the annotation just below the x-axis (y<0)
+                xref='x',
+                yref='paper',
+                text=f"Units:{row['units']}",
+                showarrow=False,
+                font=dict(size=10, color="black"),
+                align='center',
+                yanchor='bottom'
+            ))
     fig.update_yaxes(range=[300000, 2000000], tickformat='$,.0f', dtick=200000)
     fig.update_xaxes(categoryorder='array', categoryarray=sorted_x_values)
     fig.update_layout(
@@ -1355,7 +1419,7 @@ def update_scatter_plot_1(selected_municipality,selected_communities, selected_p
         font_size=10,  # Adjust hover font size
         font_family='Arial'  # Optional font family
         ),
-        annotations=[
+        annotations=annotations + [
             dict(
                 x=1,
                 y=1,
@@ -1368,7 +1432,6 @@ def update_scatter_plot_1(selected_municipality,selected_communities, selected_p
         ]
     )
     return fig, None #unit_count_text
-
 
 ###Tab2 callback and plot2
 # Slider callback to update the selected price range with comma separators
